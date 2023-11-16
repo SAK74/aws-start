@@ -1,3 +1,7 @@
+# AWS
+.aws
+cdk.out
+
 # Logs
 logs
 *.log
