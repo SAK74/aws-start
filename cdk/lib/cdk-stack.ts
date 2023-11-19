@@ -18,6 +18,7 @@ export class StaticSite extends Construct {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      versioned: false,
     });
 
     const cloudFrontOAI = new OriginAccessIdentity(this, "OAI");
@@ -51,6 +52,7 @@ export class StaticSite extends Construct {
             ],
           },
         ],
+        comment: "front-distribution",
       }
     );
 

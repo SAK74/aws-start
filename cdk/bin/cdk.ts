@@ -15,5 +15,6 @@ new StaticSiteStack(app, "StaticSiteStack", {
     account: "680957611181",
     region: "eu-north-1",
   },
+  description: "My first stack",
 });
 app.synth();
