@@ -8,7 +8,7 @@ import { products } from "./data.mjs";
 //  * @param {APIGatewayEvent} event
 //  */
 
-export const getProductList = async (event) => {
+export const handler = async (event) => {
   // console.log(event);
 
   const body = JSON.stringify({

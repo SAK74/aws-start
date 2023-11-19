@@ -2,58 +2,49 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as gatewayapi from "aws-cdk-lib/aws-apigateway";
-// import * as path from "node:path";
-// import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
-
-// type Test = cdk.aws_lambda.Function
 
 export class ProductService extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const handler = new lambda.Function(this, "lambda-handler", {
+    const getProductList = new lambda.Function(this, "get-products-list", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      // code: lambda.Code.fromAsset(
-      //   path.resolve(__dirname, "./requestHandler.ts")
-      // ),
-      code: lambda.Code.fromAsset("resources"),
-      handler: "handler.getProductList",
-    });
 
-    // const handler = new NodejsFunction(this, "handler", {
-    //   bundling: {
-    //     preCompilation: true,
-    //   },
-    // });
+      code: lambda.Code.fromAsset("resources"),
+      handler: "getProductsList.handler",
+    });
 
     const api = new gatewayapi.RestApi(this, "products-api", {
       restApiName: "product-api",
-      // description:
       deployOptions: {
         stageName: "develop",
       },
     });
 
-    // const api = new gatewayapi.LambdaRestApi(this, "lambda-api", {
-    //   handler,
-    // });
+    const productsListIntegration = new gatewayapi.LambdaIntegration(
+      getProductList,
+      {
+        // requestTemplates: {
+        //   "application/json": '{"statusCode":"200"}',
+        // },
+      }
+    );
 
-    const integration = new gatewayapi.LambdaIntegration(handler, {
-      // requestTemplates: {
-      //   "application/json": '{"statusCode":"200"}',
-      // },
+    // api.root.addMethod("GET", integration);
+    const productsList = api.root.addResource("products");
+    productsList.addMethod("GET", productsListIntegration);
+
+    const getProductById = new lambda.Function(this, "get product-by-id", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      code: lambda.Code.fromAsset("resources"),
+      handler: "getProductById.handler",
     });
 
-    api.root.addMethod("GET", integration);
+    const productByIdIntegraion = new gatewayapi.LambdaIntegration(
+      getProductById
+    );
 
-    // api.root.add
-
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'BackendQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const productById = productsList.addResource("{id}");
+    productById.addMethod("GET", productByIdIntegraion);
   }
 }
