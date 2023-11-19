@@ -17,22 +17,35 @@ export class ProductService extends cdk.Stack {
     const api = new gatewayapi.RestApi(this, "products-api", {
       restApiName: "product-api",
       deployOptions: {
-        stageName: "develop",
+        stageName: "dev",
       },
     });
 
     const productsListIntegration = new gatewayapi.LambdaIntegration(
       getProductList,
       {
-        // requestTemplates: {
-        //   "application/json": '{"statusCode":"200"}',
-        // },
+        requestTemplates: {
+          "application/json": '{"statusCode":"200"}',
+        },
       }
     );
 
     // api.root.addMethod("GET", integration);
     const productsList = api.root.addResource("products");
     productsList.addMethod("GET", productsListIntegration);
+    productsList.addCorsPreflight({
+      allowOrigins: ["*"],
+      allowMethods: ["GET", "OPTIONS"],
+      allowHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Amz-Date",
+        "X-Api-Key",
+        "X-Amz-Security-Token",
+        "X-Amz-User-Agent",
+      ],
+      allowCredentials: true,
+    });
 
     const getProductById = new lambda.Function(this, "get product-by-id", {
       runtime: lambda.Runtime.NODEJS_18_X,
@@ -41,10 +54,28 @@ export class ProductService extends cdk.Stack {
     });
 
     const productByIdIntegraion = new gatewayapi.LambdaIntegration(
-      getProductById
+      getProductById,
+      {
+        requestTemplates: {
+          "application/json": '{"statusCode":"200"}',
+        },
+      }
     );
 
     const productById = productsList.addResource("{id}");
     productById.addMethod("GET", productByIdIntegraion);
+    productById.addCorsPreflight({
+      allowOrigins: ["*"],
+      allowMethods: ["GET", "OPTIONS"],
+      allowHeaders: [
+        "Content-Type",
+        "Authorization",
+        "X-Amz-Date",
+        "X-Api-Key",
+        "X-Amz-Security-Token",
+        "X-Amz-User-Agent",
+      ],
+      allowCredentials: true,
+    });
   }
 }
