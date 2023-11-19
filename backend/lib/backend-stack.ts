@@ -9,7 +9,6 @@ export class ProductService extends cdk.Stack {
 
     const getProductList = new lambda.Function(this, "get-products-list", {
       runtime: lambda.Runtime.NODEJS_18_X,
-
       code: lambda.Code.fromAsset("resources"),
       handler: "getProductsList.handler",
     });
@@ -30,7 +29,6 @@ export class ProductService extends cdk.Stack {
       }
     );
 
-    // api.root.addMethod("GET", integration);
     const productsList = api.root.addResource("products");
     productsList.addMethod("GET", productsListIntegration);
     productsList.addCorsPreflight({

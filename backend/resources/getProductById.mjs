@@ -1,6 +1,6 @@
 import { buildResp } from "./buildResponse.mjs";
 import { products } from "./data.mjs";
-// import { APIGatewayEvent } from "aws-lambda";
+import { RequiredMethodError } from "./utils/requiredMethodError.mjs";
 
 /**
  *
@@ -11,7 +11,7 @@ export const handler = async (event) => {
   const { id } = event.pathParameters;
   try {
     if (event.httpMethod !== "GET") {
-      throw new GetRequiredError();
+      throw new RequiredMethodError();
     }
     const product = products.find((product) => product.id === id);
     if (!id || !product) {
@@ -22,9 +22,12 @@ export const handler = async (event) => {
     return buildResp(200, product);
   } catch (err) {
     let status = 500;
+    if (err instanceof RequiredMethodError) {
+      status = 400;
+    }
     if (err.name === "wrongId") {
       status = 404;
     }
-    return buildResp(status, err.message);
+    return buildResp(status, err.message || "Unknown server error");
   }
 };
