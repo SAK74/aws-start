@@ -13,6 +13,7 @@ const documentClient = DynamoDBDocumentClient.from(client);
  */
 
 export const handler = async (event) => {
+  console.log(`Method: ${event.httpMethod}\nPath: ${event.path}`);
   try {
     if (event.httpMethod !== "GET") {
       throw new RequiredMethodError();
@@ -31,7 +32,6 @@ export const handler = async (event) => {
         return { ...product, count };
       })
     );
-    console.log(completeList);
     return buildResp(200, completeList);
   } catch (err) {
     let status = 500;

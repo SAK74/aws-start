@@ -13,6 +13,8 @@ const documentClient = DynamoDBDocumentClient.from(client);
  */
 
 export const handler = async (event) => {
+  console.log(`Method: ${event.httpMethod}\nPath: ${event.path}`);
+
   const { id } = event.pathParameters;
   try {
     if (event.httpMethod !== "GET") {

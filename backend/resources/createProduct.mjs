@@ -12,6 +12,10 @@ const documentClient = DynamoDBDocumentClient.from(client);
  */
 
 export const handler = async (event) => {
+  console.log(
+    `Method: ${event.httpMethod}\nPath: ${event.path}\nBody: ${event.body}`
+  );
+
   try {
     const data = JSON.parse(event.body);
     if (!data.title || !data.price || !data.description || !data.count) {
