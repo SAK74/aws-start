@@ -1,6 +1,11 @@
-import { products } from "./data.mjs";
-import { buildResp } from "./buildResponse.mjs";
+import { buildResp } from "./utils/buildResponse.mjs";
 import { RequiredMethodError } from "./utils/requiredMethodError.mjs";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
+import { getProductCount } from "./utils/getProductCount.mjs";
+
+const client = new DynamoDBClient({ region: "eu-north-1" });
+const documentClient = DynamoDBDocumentClient.from(client);
 
 /**
  *
@@ -12,7 +17,22 @@ export const handler = async (event) => {
     if (event.httpMethod !== "GET") {
       throw new RequiredMethodError();
     }
-    return buildResp(200, products);
+    const products = (
+      await documentClient.send(
+        new ScanCommand({
+          TableName: process.env.PRODUCTS_TABLE_NAME,
+        })
+      )
+    ).Items;
+
+    const completeList = await Promise.all(
+      products.map(async (product) => {
+        const count = await getProductCount(product.id);
+        return { ...product, count };
+      })
+    );
+    console.log(completeList);
+    return buildResp(200, completeList);
   } catch (err) {
     let status = 500;
     if (err instanceof RequiredMethodError) {
