@@ -60,7 +60,13 @@ export class ProductService extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_18_X,
       code: lambda.Code.fromAsset("resources"),
       handler: "getProductById.handler",
+      environment: {
+        PRODUCTS_TABLE_NAME: "Products",
+        STOCK_TABLE_NAME: "Stock",
+      },
     });
+
+    getProductById.role?.addManagedPolicy(policy);
 
     const productByIdIntegraion = new gatewayapi.LambdaIntegration(
       getProductById,

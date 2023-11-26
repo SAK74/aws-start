@@ -4,14 +4,8 @@ const client = new DynamoDBClient({ region: "eu-north-1" });
 
 const createProducts = new CreateTableCommand({
   TableName: "Products",
-  KeySchema: [
-    { AttributeName: "id", KeyType: "HASH" },
-    { AttributeName: "title", KeyType: "RANGE" },
-  ],
-  AttributeDefinitions: [
-    { AttributeName: "id", AttributeType: "S" },
-    { AttributeName: "title", AttributeType: "S" },
-  ],
+  KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+  AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
   ProvisionedThroughput: {
     ReadCapacityUnits: 1,
     WriteCapacityUnits: 1,
