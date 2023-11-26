@@ -1,6 +1,9 @@
 import { buildResp } from "./utils/buildResponse.mjs";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  TransactWriteCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
 
 const client = new DynamoDBClient({ region: "eu-north-1" });
@@ -16,28 +19,33 @@ export const handler = async (event) => {
     `Method: ${event.httpMethod}\nPath: ${event.path}\nBody: ${event.body}`
   );
 
-  try {
-    const data = JSON.parse(event.body);
-    if (!data.title || !data.price || !data.description || !data.count) {
-      return buildResp(400, "Product data are invalid!");
-    }
+  const data = JSON.parse(event.body || "{}");
+  if (!data.title || !data.price || !data.description || !data.count) {
+    return buildResp(400, "Product data are invalid!");
+  }
+  const { count, ...product } = data;
 
-    const { count, ...product } = data;
+  try {
     const id = randomUUID();
-    documentClient.send(
-      new PutCommand({
-        TableName: process.env.STOCK_TABLE_NAME,
-        Item: { product_id: id, count },
-      })
-    );
-    const resp = (
-      await documentClient.send(
-        new PutCommand({
-          TableName: process.env.PRODUCTS_TABLE_NAME,
-          Item: { ...product, id },
-        })
-      )
-    ).$metadata;
+
+    const command = new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: process.env.STOCK_TABLE_NAME,
+            Item: { product_id: id, count },
+          },
+        },
+        {
+          Put: {
+            TableName: process.env.PRODUCTS_TABLE_NAME,
+            Item: { ...product, id },
+          },
+        },
+      ],
+    });
+
+    const resp = (await documentClient.send(command)).$metadata;
 
     return buildResp(200, resp);
   } catch (err) {
