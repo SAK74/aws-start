@@ -40,7 +40,6 @@ export class ImportServiceStack extends cdk.Stack {
         BUCKET_NAME: bucket.bucketName,
         UPLOAD_DIR,
         REGION,
-        PARSE_DIR,
       },
     });
 
@@ -48,6 +47,12 @@ export class ImportServiceStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_18_X,
       code: lambda.Code.fromAsset("dist"),
       handler: "importParse.handler",
+      environment: {
+        BUCKET_NAME: bucket.bucketName,
+        UPLOAD_DIR,
+        REGION,
+        PARSE_DIR,
+      },
     });
 
     bucket.grantWrite(importProductLambda, `${UPLOAD_DIR}/*`);
@@ -56,6 +61,8 @@ export class ImportServiceStack extends cdk.Stack {
       new cdk.aws_s3_notifications.LambdaDestination(importParseLambda)
     );
     bucket.grantRead(importParseLambda, `${UPLOAD_DIR}/*`);
+    bucket.grantDelete(importParseLambda, `${UPLOAD_DIR}/*`);
+    bucket.grantWrite(importProductLambda, `${UPLOAD_DIR}/*`);
 
     // importProductFile.addToRolePolicy(
     //   new PolicyStatement({

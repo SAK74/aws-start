@@ -5,6 +5,9 @@ import {
   GetObjectAclCommand,
   GetObjectCommand,
   S3,
+  CopyObjectCommand,
+  DeleteBucketCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 // import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3Event } from "aws-lambda";
@@ -21,11 +24,6 @@ const BUCKET = process.env.BUCKET_NAME;
 const UPLOAD_DIR = process.env.UPLOAD_DIR;
 const PARSE_DIR = process.env.PARSE_DIR;
 
-/**
- *
- * @param {S3Event} event
- */
-
 export const handler = async (event: S3Event) => {
   console.log(JSON.stringify(event.Records));
   try {
@@ -37,7 +35,8 @@ export const handler = async (event: S3Event) => {
       },
     } = event.Records[0];
     console.log("start");
-    const sourceFile = await new S3Client().send(
+    const client = new S3Client({ region: REGION });
+    const sourceFile = await client.send(
       new GetObjectCommand({ Bucket: name, Key: key })
     );
     // const s3 = (await new aws.S3().getObject()).then(obj=>obj.ge)
@@ -56,6 +55,19 @@ export const handler = async (event: S3Event) => {
         })
         .on("end", async () => {
           console.log("Results: ", results);
+          await client.send(
+            new CopyObjectCommand({
+              CopySource: `${BUCKET}/${UPLOAD_DIR}`,
+              Bucket: BUCKET,
+              Key: PARSE_DIR,
+            })
+          );
+          client.send(
+            new DeleteObjectCommand({
+              Bucket: BUCKET,
+              Key: UPLOAD_DIR,
+            })
+          );
         });
 
       // body.pipe(csv()).pipe(stdout);
