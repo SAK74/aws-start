@@ -4,23 +4,23 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as gatewayapi from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
 
+export const cors: gatewayapi.CorsOptions = {
+  allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  allowHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Amz-Date",
+    "X-Api-Key",
+    "X-Amz-Security-Token",
+    "X-Amz-User-Agent",
+  ],
+  allowCredentials: true,
+};
+
 export class ProductService extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-
-    const cors: gatewayapi.CorsOptions = {
-      allowOrigins: ["*"],
-      allowMethods: ["GET", "OPTIONS"],
-      allowHeaders: [
-        "Content-Type",
-        "Authorization",
-        "X-Amz-Date",
-        "X-Api-Key",
-        "X-Amz-Security-Token",
-        "X-Amz-User-Agent",
-      ],
-      allowCredentials: true,
-    };
 
     const getProductList = new lambda.Function(this, "get-products-list", {
       runtime: lambda.Runtime.NODEJS_18_X,
