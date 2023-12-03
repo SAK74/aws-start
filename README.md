@@ -1,9 +1,17 @@
-# React-shop-cloudfront
+## Welcome to CDK TypeScript project
 
-This is frontend starter project for nodejs-aws mentoring program.
+<br/>
 
-## Solutions:
+# Topic: Serverless API
 
-### [S3-website](http://train-aws.s3-website.eu-central-1.amazonaws.com/)
+# Goals:
 
-### [CloudFront](https://d2di9xnvf67nf.cloudfront.net)
+- Learn what Serverless is all about
+  Explore different serverless-related services like Lambda, API Gateway, etc.
+- Set up an API Gateway and Lambda-based architecture
+
+## Solution:
+
+### [Gateway link](https://dv723ezvf7.execute-api.eu-north-1.amazonaws.com/dev/products)
+
+### [Cloud front link](https://d2w6eb7for7x7b.cloudfront.net/)
