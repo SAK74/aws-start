@@ -5,8 +5,9 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { cors } from "./product-service";
 import { Bucket, HttpMethods, EventType } from "aws-cdk-lib/aws-s3";
 
-const DIR_NAME = "uploaded";
+const UPLOAD_DIR = "uploaded";
 const REGION = "eu-north-1";
+const PARSE_DIR = "parsed";
 
 export class ImportServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -37,16 +38,24 @@ export class ImportServiceStack extends cdk.Stack {
       handler: "importProduct.handler",
       environment: {
         BUCKET_NAME: bucket.bucketName,
-        DIR_NAME,
+        UPLOAD_DIR,
         REGION,
+        PARSE_DIR,
       },
     });
 
-    bucket.grantWrite(importProductLambda, `${DIR_NAME}/*`);
-    // bucket.addEventNotification(
-    //   EventType.OBJECT_CREATED,
-    //   new cdk.aws_s3_notifications.LambdaDestination(importProductFile)
-    // );
+    const importParseLambda = new lambda.Function(this, "parse-uploaded", {
+      runtime: lambda.Runtime.NODEJS_18_X,
+      code: lambda.Code.fromAsset("dist"),
+      handler: "importParse.handler",
+    });
+
+    bucket.grantWrite(importProductLambda, `${UPLOAD_DIR}/*`);
+    bucket.addEventNotification(
+      EventType.OBJECT_CREATED,
+      new cdk.aws_s3_notifications.LambdaDestination(importParseLambda)
+    );
+    bucket.grantRead(importParseLambda, `${UPLOAD_DIR}/*`);
 
     // importProductFile.addToRolePolicy(
     //   new PolicyStatement({
