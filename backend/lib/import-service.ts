@@ -48,8 +48,6 @@ export class ImportServiceStack extends cdk.Stack {
       code: lambda.Code.fromAsset("dist"),
       handler: "importParse.handler",
       environment: {
-        BUCKET_NAME: bucket.bucketName,
-        UPLOAD_DIR,
         REGION,
         PARSE_DIR,
       },
@@ -60,19 +58,9 @@ export class ImportServiceStack extends cdk.Stack {
       EventType.OBJECT_CREATED,
       new cdk.aws_s3_notifications.LambdaDestination(importParseLambda)
     );
-    bucket.grantRead(importParseLambda, `${UPLOAD_DIR}/*`);
     bucket.grantDelete(importParseLambda, `${UPLOAD_DIR}/*`);
-    bucket.grantWrite(importProductLambda, `${UPLOAD_DIR}/*`);
-
-    // importProductFile.addToRolePolicy(
-    //   new PolicyStatement({
-    //     actions: ["s3:putObject"],
-    //     resources: [bucket.arnForObjects(`${DIR_NAME}/*`)],
-    //     effect: Effect.ALLOW,
-    //   })
-    // );
-    // const policy = ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess")
-    // importProductFile.role?.addManagedPolicy(policy)
+    bucket.grantRead(importParseLambda, `${UPLOAD_DIR}/*`);
+    bucket.grantWrite(importParseLambda, `${PARSE_DIR}/*`);
 
     const lambdaIntegration = new apigateway.LambdaIntegration(
       importProductLambda,
