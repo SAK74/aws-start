@@ -56,7 +56,8 @@ export class ImportServiceStack extends cdk.Stack {
     bucket.grantWrite(importProductLambda, `${UPLOAD_DIR}/*`);
     bucket.addEventNotification(
       EventType.OBJECT_CREATED,
-      new cdk.aws_s3_notifications.LambdaDestination(importParseLambda)
+      new cdk.aws_s3_notifications.LambdaDestination(importParseLambda),
+      { prefix: UPLOAD_DIR }
     );
     bucket.grantDelete(importParseLambda, `${UPLOAD_DIR}/*`);
     bucket.grantRead(importParseLambda, `${UPLOAD_DIR}/*`);
