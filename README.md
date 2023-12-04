@@ -2,15 +2,14 @@
 
 <br/>
 
-# Topic: Integration with DynamoDB
+# Topic: Integration with S3
 
 # Goal:
 
-- Explore different database concepts and services
-- Set up an integration with DynamoDB
+- Learn what Simple Storage Service is all about
+- Explore different S3-related concepts like storage classes, object lifecycle, etc.
+- Set up an integration with AWS S3 and AWS Lambda
 
 ## Solution:
-
-### [Gateway link](https://jvegfenmcd.execute-api.eu-north-1.amazonaws.com/dev/products)
 
 ### [Cloud front link](https://d2w6eb7for7x7b.cloudfront.net)
