@@ -1,8 +1,9 @@
-import { buildResp } from "./utils/buildResponse.mjs";
-import { RequiredMethodError } from "./utils/requiredMethodError.mjs";
+import { buildResp } from "./utils/buildResponse.js";
+import { RequiredMethodError } from "./utils/requiredMethodError.js";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
-import { getProductCount } from "./utils/getProductCount.mjs";
+import { getProductCount } from "./utils/getProductCount.js";
+import { APIGatewayEvent } from "aws-lambda";
 
 const client = new DynamoDBClient({ region: "eu-north-1" });
 const documentClient = DynamoDBDocumentClient.from(client);
@@ -12,7 +13,7 @@ const documentClient = DynamoDBDocumentClient.from(client);
  * @param {APIGatewayEvent} event
  */
 
-export const handler = async (event) => {
+export const handler = async (event: APIGatewayEvent) => {
   console.log(`Method: ${event.httpMethod}\nPath: ${event.path}`);
   try {
     if (event.httpMethod !== "GET") {
@@ -26,6 +27,10 @@ export const handler = async (event) => {
       )
     ).Items;
 
+    if (!products) {
+      throw new Error("No products available..");
+    }
+
     const completeList = await Promise.all(
       products.map(async (product) => {
         const count = await getProductCount(product.id);
@@ -38,6 +43,7 @@ export const handler = async (event) => {
     if (err instanceof RequiredMethodError) {
       status = 400;
     }
-    return buildResp(status, err.message || "Unknown server error");
+    console.error(err);
+    return buildResp(status, (err as Error).message || "Unknown server error");
   }
 };

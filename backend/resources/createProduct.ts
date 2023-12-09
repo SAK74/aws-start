@@ -1,20 +1,16 @@
-import { buildResp } from "./utils/buildResponse.mjs";
+import { buildResp } from "./utils/buildResponse";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { randomUUID } from "crypto";
+import { APIGatewayEvent, Handler } from "aws-lambda";
 
 const client = new DynamoDBClient({ region: "eu-north-1" });
 const documentClient = DynamoDBDocumentClient.from(client);
 
-/**
- *
- * @param {APIGatewayEvent} event
- */
-
-export const handler = async (event) => {
+export const handler: Handler<APIGatewayEvent> = async (event) => {
   console.log(
     `Method: ${event.httpMethod}\nPath: ${event.path}\nBody: ${event.body}`
   );
@@ -49,6 +45,6 @@ export const handler = async (event) => {
 
     return buildResp(200, resp);
   } catch (err) {
-    return buildResp(500, err.message || "Unknown server error...");
+    return buildResp(500, (err as Error).message || "Unknown server error...");
   }
 };

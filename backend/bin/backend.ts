@@ -7,4 +7,4 @@ import { ImportServiceStack } from "../lib/import-service";
 const app = new cdk.App();
 new ProductService(app, "product-service", {});
 new ImportServiceStack(app, "import-service", {});
-// app.synth();
+app.synth();

@@ -3,6 +3,7 @@ import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as gatewayapi from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
+import { LambdaFunctionProps } from "aws-cdk-lib/aws-events-targets";
 
 export const cors: gatewayapi.CorsOptions = {
   allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
@@ -18,13 +19,17 @@ export const cors: gatewayapi.CorsOptions = {
   allowCredentials: true,
 };
 
+const sharedLambdaProps: Omit<cdk.aws_lambda.FunctionProps, "handler"> = {
+  runtime: lambda.Runtime.NODEJS_18_X,
+  code: lambda.Code.fromAsset("dist"),
+};
+
 export class ProductService extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const getProductList = new lambda.Function(this, "get-products-list", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      ...sharedLambdaProps,
       handler: "getProductsList.handler",
     });
 
@@ -49,8 +54,7 @@ export class ProductService extends cdk.Stack {
     productsList.addCorsPreflight(cors);
 
     const getProductById = new lambda.Function(this, "get product-by-id", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      ...sharedLambdaProps,
       handler: "getProductById.handler",
     });
 
@@ -68,8 +72,7 @@ export class ProductService extends cdk.Stack {
     productById.addCorsPreflight(cors);
 
     const createProduct = new lambda.Function(this, "create-product", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      ...sharedLambdaProps,
       handler: "createProduct.handler",
     });
 
@@ -93,5 +96,14 @@ export class ProductService extends cdk.Stack {
       lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
       lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
     });
+
+    const catalogBatchProcessLambda = new lambda.Function(
+      this,
+      "catalog-batch-process",
+      {
+        ...sharedLambdaProps,
+        handler: "catalogBatchProcess.handler",
+      }
+    );
   }
 }

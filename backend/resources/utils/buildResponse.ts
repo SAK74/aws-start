@@ -1,7 +1,9 @@
+import { OutgoingHttpHeaders } from "http";
+
 export const buildResp = (
-  status,
-  body,
-  headers = {
+  status: number,
+  body: any,
+  headers: OutgoingHttpHeaders = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":

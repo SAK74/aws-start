@@ -34,7 +34,7 @@ export class ImportServiceStack extends cdk.Stack {
 
     const importProductLambda = new lambda.Function(this, "get-upload-url", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      code: lambda.Code.fromAsset("dist"),
       handler: "importProduct.handler",
       environment: {
         BUCKET_NAME: bucket.bucketName,

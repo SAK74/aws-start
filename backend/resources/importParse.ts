@@ -24,15 +24,15 @@ export const handler = async (event: S3Event) => {
     const sourceFile = await client.send(
       new GetObjectCommand({ Bucket: name, Key: key })
     );
-    const body = await sourceFile.Body?.transformToString();
+    const body = sourceFile.Body;
     if (body) {
       const results: string[] = [];
       await finished(
-        Readable.from(body)
-          .pipe(csv())
-          .on("data", (data) => {
-            results.push(data);
-          })
+        // Readable.from(body)
+        (body as Readable).pipe(csv()).on("data", (data) => {
+          console.log(data);
+          // results.push(data);
+        })
       );
       console.log("Result: ", results);
 
