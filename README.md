@@ -2,13 +2,14 @@
 
 <br/>
 
-# Topic: Integration with S3
+# SQS & SNS, Async Microservices Communication
 
-# Goal:
+# Goals:
 
-- Learn what Simple Storage Service is all about
-- Explore different S3-related concepts like storage classes, object lifecycle, etc.
-- Set up an integration with AWS S3 and AWS Lambda
+- Async Messaging Overview
+- AWS SQS Overview
+- AWS SNS Overview
+- Integration with SQS, SNS and Lambda Overview
 
 ## Solution:
 
