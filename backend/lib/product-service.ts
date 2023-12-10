@@ -38,7 +38,7 @@ export class ProductService extends cdk.Stack {
 
     const getProductList = new lambda.Function(this, "get-products-list", {
       ...sharedLambdaProps,
-      code: lambda.Code.fromAsset("dist"),
+      code: lambda.Code.fromAsset("dist/getProductsList"),
 
       handler: "getProductsList.handler",
     });
@@ -65,7 +65,7 @@ export class ProductService extends cdk.Stack {
 
     const getProductById = new lambda.Function(this, "get product-by-id", {
       ...sharedLambdaProps,
-      code: lambda.Code.fromAsset("dist"),
+      code: lambda.Code.fromAsset("dist/getProductById"),
 
       handler: "getProductById.handler",
     });
@@ -85,7 +85,7 @@ export class ProductService extends cdk.Stack {
 
     const createProduct = new lambda.Function(this, "create-product", {
       ...sharedLambdaProps,
-      code: lambda.Code.fromAsset("dist"),
+      code: lambda.Code.fromAsset("dist/createProduct"),
 
       handler: "createProduct.handler",
     });
@@ -128,7 +128,7 @@ export class ProductService extends cdk.Stack {
       "catalog-batch-process",
       {
         ...sharedLambdaProps,
-        code: lambda.Code.fromAsset("dist"),
+        code: lambda.Code.fromAsset("dist/catalogBatchProcess"),
 
         handler: "catalogBatchProcess.handler",
         environment: {

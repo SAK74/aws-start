@@ -1,32 +1,35 @@
 import * as esbuild from "esbuild";
 import { argv } from "process";
 
-const buildImportStackHandlers = async () => {
-  console.log("build import handlers");
-  esbuild.build({
-    entryPoints: ["./resources/importParse.ts", "./resources/importProduct.ts"],
-    tsconfig: "./tsconfig.builder.json",
-    bundle: true,
-    platform: "node",
-    outdir: "dist",
-  });
+const buildHandlers = async (...sourceNames: string[]) => {
+  console.log("build handlers: ");
+  for (const sourceName of sourceNames) {
+    console.log(sourceName);
+    await esbuild.build({
+      entryPoints: [`./resources/${sourceName}.ts`],
+      tsconfig: "./tsconfig.builder.json",
+      bundle: true,
+      platform: "node",
+      outdir: `dist/${sourceName}`,
+    });
+  }
 };
 
-const buildProductStackHandlers = async () => {
-  console.log("build products handlers");
-  esbuild.build({
-    entryPoints: [
-      "./resources/getProductsList.ts",
-      "./resources/getProductById.ts",
-      "./resources/createProduct.ts",
-      "./resources/catalogBatchProcess.ts",
-    ],
-    tsconfig: "./tsconfig.builder.json",
-    bundle: true,
-    platform: "node",
-    outdir: "dist",
-  });
-};
+// const buildProductStackHandlers = async () => {
+//   console.log("build products handlers");
+//   esbuild.build({
+//     entryPoints: [
+//       "./resources/getProductsList.ts",
+//       "./resources/getProductById.ts",
+//       "./resources/createProduct.ts",
+//       "./resources/catalogBatchProcess.ts",
+//     ],
+//     tsconfig: "./tsconfig.builder.json",
+//     bundle: true,
+//     platform: "node",
+//     outdir: "dist",
+//   });
+// };
 
 let type: string[] | undefined;
 const params = argv.slice(2);
@@ -42,10 +45,15 @@ if (
 type.forEach((type) => {
   switch (type) {
     case "import":
-      buildImportStackHandlers();
+      buildHandlers("importParse", "importProduct");
       break;
     case "products":
-      buildProductStackHandlers();
+      buildHandlers(
+        "getProductsList",
+        "getProductById",
+        "createProduct",
+        "catalogBatchProcess"
+      );
       break;
     default:
       throw new Error("Wrong type on builder!");

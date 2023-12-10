@@ -37,7 +37,7 @@ export class ImportServiceStack extends cdk.Stack {
 
     const importProductLambda = new lambda.Function(this, "get-upload-url", {
       runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("dist"),
+      code: lambda.Code.fromAsset("dist/importProduct"),
       handler: "importProduct.handler",
       environment: {
         BUCKET_NAME: bucket.bucketName,
@@ -51,8 +51,7 @@ export class ImportServiceStack extends cdk.Stack {
     });
     const importParseLambda = new lambda.Function(this, "parse-uploaded", {
       ...sharedLambdaProps,
-      code: lambda.Code.fromAsset("dist"),
-
+      code: lambda.Code.fromAsset("dist/importParse"),
       handler: "importParse.handler",
       environment: {
         REGION,
