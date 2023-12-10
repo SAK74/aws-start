@@ -1,5 +1,5 @@
 import { SQSEvent } from "aws-lambda";
-import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
+import { SNSClient, PublishBatchCommand } from "@aws-sdk/client-sns";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { TransactWriteCommandInput } from "@aws-sdk/lib-dynamodb";
 import {
@@ -32,15 +32,45 @@ export const handler = async (event: SQSEvent) => {
   );
 
   await snsClient.send(
-    new PublishCommand({
+    new PublishBatchCommand({
       TopicArn: process.env.TOPIC_ARN,
-      Message: `Hi! Successfully add follow products:\n ${JSON.stringify(
-        event.Records.map((record) => JSON.parse(record.body)),
-        null,
-        4
-      )}`,
+      PublishBatchRequestEntries: event.Records.map(({ body, messageId }) => {
+        const product = JSON.parse(body) as Product;
+        return {
+          Id: messageId,
+          Message: `Record has been added successfully:\n${JSON.stringify(
+            product,
+            null,
+            4
+          )}`,
+          MessageAttributes: {
+            count: {
+              DataType: "Number",
+              StringValue: product.count.toString(),
+            },
+            price: {
+              DataType: "Number",
+              StringValue: product.price.toString(),
+            },
+          },
+        };
+      }),
     })
   );
+
+  // await snsClient.send(
+  //   new PublishCommand({
+  //     TopicArn: process.env.TOPIC_ARN,
+  //     Message: `Hi! Successfully add follow products:\n ${JSON.stringify(
+  //       event.Records.map((record) => JSON.parse(record.body)),
+  //       null,
+  //       4
+  //     )}`,
+  //     MessageAttributes: {
+  //       price: { DataType: "Number" ,StringValue:},
+  //     },
+  //   })
+  // );
   // await snsClient.send(
   //   new PublishBatchCommand({
   //     TopicArn: process.env.TOPIC_ARN,

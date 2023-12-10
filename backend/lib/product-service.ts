@@ -26,12 +26,12 @@ export const sharedLambdaProps: Omit<
   "handler" | "code"
 > = {
   runtime: lambda.Runtime.NODEJS_18_X,
-  // code: lambda.Code.fromAsset("dist"),
 };
 
 interface ProductsServiceProps extends cdk.StackProps {
   catalogItemsQueue: sqs.Queue;
 }
+
 export class ProductService extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ProductsServiceProps) {
     super(scope, id, props);
@@ -101,25 +101,23 @@ export class ProductService extends cdk.Stack {
 
     productsList.addMethod("POST", createProductIntegration);
 
-    const policy = iam.ManagedPolicy.fromAwsManagedPolicyName(
-      "AmazonDynamoDBFullAccess"
-    );
-
-    // [getProductList, getProductById, createProduct].forEach((lambda) => {
-    //   lambda.role?.addManagedPolicy(policy);
-    //   lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
-    //   lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
-    // });
-
     const productTopic = new sns.Topic(this, "create-product-topic", {});
 
-    const mailSubscription = new sns.Subscription(this, "mail-subscription", {
+    new sns.Subscription(this, "main-mail-subscription", {
       topic: productTopic,
       protocol: sns.SubscriptionProtocol.EMAIL,
-      endpoint: process.env.SUBSCRIBED_EMAIL || "",
+      endpoint: process.env.SUBSCRIBED_EMAIL1 || "",
     });
 
-    // productTopic.addSubscription(mailSubscription)
+    new sns.Subscription(this, "additional-mail-subscription", {
+      topic: productTopic,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      endpoint: process.env.SUBSCRIBED_EMAIL2 || "",
+      filterPolicy: {
+        price: sns.SubscriptionFilter.numericFilter({ lessThan: 30 }),
+        count: sns.SubscriptionFilter.numericFilter({ greaterThan: 10 }),
+      },
+    });
 
     const catalogItemsQueue = props.catalogItemsQueue;
 
@@ -129,7 +127,6 @@ export class ProductService extends cdk.Stack {
       {
         ...sharedLambdaProps,
         code: lambda.Code.fromAsset("dist/catalogBatchProcess"),
-
         handler: "catalogBatchProcess.handler",
         environment: {
           QUEUE_URL: catalogItemsQueue.queueUrl,
@@ -146,13 +143,16 @@ export class ProductService extends cdk.Stack {
       new SqsEventSource(catalogItemsQueue, { batchSize: 5 })
     );
 
+    const dbAccessPolicy = iam.ManagedPolicy.fromAwsManagedPolicyName(
+      "AmazonDynamoDBFullAccess"
+    );
     [
       getProductList,
       getProductById,
       createProduct,
       catalogBatchProcessLambda,
     ].forEach((lambda) => {
-      lambda.role?.addManagedPolicy(policy);
+      lambda.role?.addManagedPolicy(dbAccessPolicy);
       lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
       lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
     });

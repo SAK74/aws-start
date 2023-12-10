@@ -11,7 +11,6 @@ const REGION = "eu-north-1";
 const PARSE_DIR = "parsed";
 
 export class ImportServiceStack extends cdk.Stack {
-  // importParseLambda: lambda.Function;
   catalogItemsQueue: Queue;
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
