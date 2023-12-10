@@ -4,7 +4,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const REGION = process.env.REGION;
 const BUCKET = process.env.BUCKET_NAME;
-const DIR = process.env.DIR_NAME;
+const DIR = process.env.UPLOAD_DIR;
 
 /**
  *
