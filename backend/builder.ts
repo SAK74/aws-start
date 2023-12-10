@@ -19,6 +19,7 @@ const buildProductStackHandlers = async () => {
       "./resources/getProductsList.ts",
       "./resources/getProductById.ts",
       "./resources/createProduct.ts",
+      "./resources/catalogBatchProcess.ts",
     ],
     tsconfig: "./tsconfig.builder.json",
     bundle: true,

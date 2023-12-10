@@ -2,14 +2,17 @@ import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { cors } from "./product-service";
+import { cors, sharedLambdaProps } from "./product-service";
 import { Bucket, HttpMethods, EventType } from "aws-cdk-lib/aws-s3";
+import { Queue } from "aws-cdk-lib/aws-sqs";
 
 const UPLOAD_DIR = "uploaded";
 const REGION = "eu-north-1";
 const PARSE_DIR = "parsed";
 
 export class ImportServiceStack extends cdk.Stack {
+  // importParseLambda: lambda.Function;
+  catalogItemsQueue: Queue;
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -43,15 +46,22 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    this.catalogItemsQueue = new Queue(this, "catalog-items-queue", {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
     const importParseLambda = new lambda.Function(this, "parse-uploaded", {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      ...sharedLambdaProps,
       code: lambda.Code.fromAsset("dist"),
+
       handler: "importParse.handler",
       environment: {
         REGION,
         PARSE_DIR,
+        QUEUE_URL: this.catalogItemsQueue.queueUrl,
       },
     });
+
+    this.catalogItemsQueue.grantSendMessages(importParseLambda);
 
     bucket.grantWrite(importProductLambda, `${UPLOAD_DIR}/*`);
     bucket.addEventNotification(

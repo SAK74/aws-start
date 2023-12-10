@@ -3,7 +3,9 @@ import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as gatewayapi from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { LambdaFunctionProps } from "aws-cdk-lib/aws-events-targets";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as sns from "aws-cdk-lib/aws-sns";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export const cors: gatewayapi.CorsOptions = {
   allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
@@ -19,17 +21,25 @@ export const cors: gatewayapi.CorsOptions = {
   allowCredentials: true,
 };
 
-const sharedLambdaProps: Omit<cdk.aws_lambda.FunctionProps, "handler"> = {
+export const sharedLambdaProps: Omit<
+  cdk.aws_lambda.FunctionProps,
+  "handler" | "code"
+> = {
   runtime: lambda.Runtime.NODEJS_18_X,
-  code: lambda.Code.fromAsset("dist"),
+  // code: lambda.Code.fromAsset("dist"),
 };
 
+interface ProductsServiceProps extends cdk.StackProps {
+  catalogItemsQueue: sqs.Queue;
+}
 export class ProductService extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: ProductsServiceProps) {
     super(scope, id, props);
 
     const getProductList = new lambda.Function(this, "get-products-list", {
       ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist"),
+
       handler: "getProductsList.handler",
     });
 
@@ -55,6 +65,8 @@ export class ProductService extends cdk.Stack {
 
     const getProductById = new lambda.Function(this, "get product-by-id", {
       ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist"),
+
       handler: "getProductById.handler",
     });
 
@@ -73,6 +85,8 @@ export class ProductService extends cdk.Stack {
 
     const createProduct = new lambda.Function(this, "create-product", {
       ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist"),
+
       handler: "createProduct.handler",
     });
 
@@ -97,13 +111,39 @@ export class ProductService extends cdk.Stack {
       lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
     });
 
+    const productTopic = new sns.Topic(this, "create-product-topic", {});
+
+    const mailSubscription = new sns.Subscription(this, "mail-subscription", {
+      topic: productTopic,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      endpoint: process.env.SUBSCRIBED_EMAIL || "",
+    });
+
+    // productTopic.addSubscription(mailSubscription)
+
+    const catalogItemsQueue = props.catalogItemsQueue;
+
     const catalogBatchProcessLambda = new lambda.Function(
       this,
       "catalog-batch-process",
       {
         ...sharedLambdaProps,
+        code: lambda.Code.fromAsset("dist"),
+
         handler: "catalogBatchProcess.handler",
+        environment: {
+          QUEUE_URL: catalogItemsQueue.queueUrl,
+          TOPIC_ARN: productTopic.topicArn,
+        },
       }
+    );
+
+    catalogItemsQueue.grantConsumeMessages(catalogBatchProcessLambda);
+
+    productTopic.grantPublish(catalogBatchProcessLambda);
+
+    catalogBatchProcessLambda.addEventSource(
+      new SqsEventSource(catalogItemsQueue, { batchSize: 5 })
     );
   }
 }
