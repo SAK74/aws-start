@@ -1,39 +1,35 @@
-// import {
-//   S3Client,
-//   GetObjectCommand,
-//   CopyObjectCommand,
-//   DeleteObjectCommand,
-// } from "@aws-sdk/client-s3";
-import { S3Event, SQSEvent } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
+import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { TransactWriteCommandInput } from "@aws-sdk/lib-dynamodb";
 import {
-  PublishBatchCommand,
-  PublishCommand,
-  SNSClient,
-} from "@aws-sdk/client-sns";
+  DynamoDBDocumentClient,
+  TransactWriteCommand,
+} from "@aws-sdk/lib-dynamodb";
+import { createTransaction } from "./utils/createTransaction";
+import { Product } from "../types";
 
-// const REGION = process.env.REGION;
-// const PARSE_DIR = process.env.PARSE_DIR;
 const snsClient = new SNSClient();
+
+const dbClient = DynamoDBDocumentClient.from(new DynamoDBClient());
 
 export const handler = async (event: SQSEvent) => {
   console.log("SQS event: ", JSON.stringify(event.Records));
 
-  for (const { body } of event.Records) {
-    console.log("body: ", body);
-
-    // to do add to DB !!!!!!!
-
-    // await snsClient.send(
-    //   new PublishCommand({
-    //     TopicArn: process.env.TOPIC_ARN,
-    //     Message: `Hi! Successfully add product: ${body}`,
-    //   })
-    // );
-
-    // console.log("sent to topic!");
+  const allTransactions: TransactWriteCommandInput["TransactItems"] = [];
+  for (const record of event.Records) {
+    const product = JSON.parse(record.body) as Product;
+    console.log("product: ", product);
+    const transaction = createTransaction(product);
+    if (transaction) {
+      allTransactions.push(...transaction);
+    }
   }
-
-  // to do add to DB !!!!!!!
+  await dbClient.send(
+    new TransactWriteCommand({
+      TransactItems: allTransactions,
+    })
+  );
 
   await snsClient.send(
     new PublishCommand({

@@ -15,22 +15,6 @@ const buildHandlers = async (...sourceNames: string[]) => {
   }
 };
 
-// const buildProductStackHandlers = async () => {
-//   console.log("build products handlers");
-//   esbuild.build({
-//     entryPoints: [
-//       "./resources/getProductsList.ts",
-//       "./resources/getProductById.ts",
-//       "./resources/createProduct.ts",
-//       "./resources/catalogBatchProcess.ts",
-//     ],
-//     tsconfig: "./tsconfig.builder.json",
-//     bundle: true,
-//     platform: "node",
-//     outdir: "dist",
-//   });
-// };
-
 let type: string[] | undefined;
 const params = argv.slice(2);
 if (

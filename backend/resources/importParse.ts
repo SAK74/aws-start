@@ -8,11 +8,7 @@ import { S3Event } from "aws-lambda";
 import csv from "csv-parser";
 import { Readable } from "stream";
 import { finished } from "node:stream/promises";
-import {
-  SQSClient,
-  SendMessageBatchCommand,
-  SendMessageCommand,
-} from "@aws-sdk/client-sqs";
+import { SQSClient, SendMessageBatchCommand } from "@aws-sdk/client-sqs";
 
 const REGION = process.env.REGION;
 const PARSE_DIR = process.env.PARSE_DIR;
@@ -42,23 +38,18 @@ export const handler = async (event: S3Event) => {
     if (body) {
       const results: Record<string, any>[] = [];
       await finished(
-        // Readable.from(body)
         (body as Readable).pipe(csv()).on("data", (data) => {
-          console.log("in stream", data);
+          // console.log("in stream", data);
           results.push(data);
-          // sqsClient.send(
-          //   new SendMessageCommand({
-          //     QueueUrl: process.env.QUEUE_URL,
-          //     MessageBody: JSON.stringify(data),
-          //   })
-          // );
-          // console.log("sent from stream");
         })
       );
       console.log("Result: ", results);
 
       // assurance max batch size
-      const splitedArray = splitArray(results, maxBatchSize);
+      const splitedArray =
+        results.length > maxBatchSize
+          ? splitArray(results, maxBatchSize)
+          : [results];
 
       for (const part of splitedArray) {
         await sqsClient.send(
@@ -72,28 +63,6 @@ export const handler = async (event: S3Event) => {
         );
         console.log("Sent messages to queue!");
       }
-
-      // await sqsClient.send(
-      //   new SendMessageBatchCommand({
-      //     QueueUrl: process.env.QUEUE_URL,
-      //     Entries: results.map((el, i) => ({
-      //       Id: i.toString(),
-      //       MessageBody: JSON.stringify(el),
-      //     })),
-      //   })
-      // );
-
-      // console.log("Sent messages to queue!");
-
-      // for (const item of results) {
-      //   await sqsClient.send(
-      //     new SendMessageCommand({
-      //       QueueUrl: process.env.QUEUE_URL,
-      //       MessageBody: JSON.stringify(item),
-      //     })
-      //   );
-      //   console.log("Sent one message to queue!: ", item);
-      // }
 
       await client.send(
         new CopyObjectCommand({

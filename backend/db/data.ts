@@ -1,10 +1,6 @@
-type Product = {
-  title: string;
-  description: string;
-  price: number;
-};
+import { Product } from "../types";
 
-export const products: Product[] = [
+export const products: Omit<Product, "count">[] = [
   {
     description: "Short Product Description1",
     price: 24,

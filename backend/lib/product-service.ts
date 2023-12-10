@@ -105,11 +105,11 @@ export class ProductService extends cdk.Stack {
       "AmazonDynamoDBFullAccess"
     );
 
-    [getProductList, getProductById, createProduct].forEach((lambda) => {
-      lambda.role?.addManagedPolicy(policy);
-      lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
-      lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
-    });
+    // [getProductList, getProductById, createProduct].forEach((lambda) => {
+    //   lambda.role?.addManagedPolicy(policy);
+    //   lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
+    //   lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
+    // });
 
     const productTopic = new sns.Topic(this, "create-product-topic", {});
 
@@ -145,5 +145,16 @@ export class ProductService extends cdk.Stack {
     catalogBatchProcessLambda.addEventSource(
       new SqsEventSource(catalogItemsQueue, { batchSize: 5 })
     );
+
+    [
+      getProductList,
+      getProductById,
+      createProduct,
+      catalogBatchProcessLambda,
+    ].forEach((lambda) => {
+      lambda.role?.addManagedPolicy(policy);
+      lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
+      lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
+    });
   }
 }
