@@ -58,30 +58,6 @@ export const handler = async (event: SQSEvent) => {
     })
   );
 
-  // await snsClient.send(
-  //   new PublishCommand({
-  //     TopicArn: process.env.TOPIC_ARN,
-  //     Message: `Hi! Successfully add follow products:\n ${JSON.stringify(
-  //       event.Records.map((record) => JSON.parse(record.body)),
-  //       null,
-  //       4
-  //     )}`,
-  //     MessageAttributes: {
-  //       price: { DataType: "Number" ,StringValue:},
-  //     },
-  //   })
-  // );
-  // await snsClient.send(
-  //   new PublishBatchCommand({
-  //     TopicArn: process.env.TOPIC_ARN,
-  //     PublishBatchRequestEntries: event.Records.map(
-  //       ({ body, messageId }, i) => ({
-  //         Id: messageId,
-  //         Message: body,
-  //       })
-  //     ),
-  //   })
-  // );
   console.log("sent to topic!");
 
   try {
