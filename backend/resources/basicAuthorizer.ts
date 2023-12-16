@@ -16,11 +16,12 @@ export const handler: APIGatewayAuthorizerHandler = async (event) => {
     return createResponse(false, event.methodArn);
   }
 
-  const decoded = Buffer.from(splitedToken[1], "base64")
+  const [user, password] = Buffer.from(splitedToken[1], "base64")
     .toString("utf-8")
     .split(":");
-  console.log("decoded: ", decoded);
-  const approved = process.env[decoded[0]] === decoded[1];
+  console.log("user: ", user);
+  console.log("password: ", password);
+  const approved = Boolean(process.env[user]) && process.env[user] === password;
   return createResponse(approved, event.methodArn);
 };
 
