@@ -5,6 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { sharedLambdaProps } from "./product-service";
 
 export class AuthServiceStack extends cdk.Stack {
+  authorizer: apiGateway.IAuthorizer;
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -21,29 +22,9 @@ export class AuthServiceStack extends cdk.Stack {
       }
     );
 
-    const authorizer = new apiGateway.TokenAuthorizer(
-      this,
-      "simply-authorizer",
-      {
-        handler: authorizerLambda,
-        identitySource: "method.request.header.Authorization",
-      }
-    );
-
-    // to remove
-    const testHandler = new lambda.Function(this, "test-handler", {
-      ...sharedLambdaProps,
-      code: lambda.Code.fromAsset("dist/test-handler"),
-      handler: "test-handler.handler",
+    new cdk.CfnOutput(this, "authorizer-output", {
+      value: authorizerLambda.functionArn,
+      exportName: "AuthStack:AuthorizerId",
     });
-
-    const api = new apiGateway.RestApi(this, "auth-api", {});
-    api.root.addMethod(
-      lambda.HttpMethod.GET,
-      new apiGateway.LambdaIntegration(testHandler),
-      {
-        authorizer,
-      }
-    );
   }
 }

@@ -40,7 +40,7 @@ type.forEach((type) => {
       );
       break;
     case "auth":
-      buildHandlers("basicAuthorizer", "test-handler");
+      buildHandlers("basicAuthorizer");
       break;
     default:
       throw new Error("Wrong type on builder!");

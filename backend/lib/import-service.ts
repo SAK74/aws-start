@@ -12,6 +12,7 @@ const PARSE_DIR = "parsed";
 
 export class ImportServiceStack extends cdk.Stack {
   catalogItemsQueue: Queue;
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -76,9 +77,24 @@ export class ImportServiceStack extends cdk.Stack {
       {}
     );
 
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      "simply-authorizer",
+      {
+        handler: lambda.Function.fromFunctionArn(
+          this,
+          "autorizer-lambda",
+          cdk.Fn.importValue("AuthStack:AuthorizerId")
+        ),
+        identitySource: "method.request.header.Authorization",
+      }
+    );
+
     const importResource = api.root.addResource("import", {
       defaultCorsPreflightOptions: cors,
     });
-    importResource.addMethod("GET", lambdaIntegration, {});
+    importResource.addMethod("GET", lambdaIntegration, {
+      authorizer,
+    });
   }
 }

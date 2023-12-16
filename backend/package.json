@@ -14,10 +14,10 @@
     "deploy:import": "cdk deploy import-service",
     "deploy:all": "cdk deploy --all",
     "db:create": "ts-node --prefer-ts-exts db/create.ts",
-    "db:fill": "ts-node --prefer-ts-exts db/fill.ts",
+    "db:seed": "ts-node --prefer-ts-exts db/fill.ts",
     "predeploy:import": "ts-node builder.ts type=import",
     "predeploy:products": "ts-node builder.ts type=products",
-    "predeploy:all": "ts-node builder.ts type=import,products",
+    "predeploy:all": "ts-node builder.ts type=import,products,auth",
     "deploy:auth": "cdk deploy auth-service",
     "predeploy:auth": "ts-node builder.ts type=auth"
   },

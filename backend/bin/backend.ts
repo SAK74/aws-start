@@ -8,12 +8,12 @@ import { AuthServiceStack } from "../lib/authorization-service";
 
 const app = new cdk.App();
 
+new AuthServiceStack(app, "auth-service");
+
 const importService = new ImportServiceStack(app, "import-service", {});
 
 new ProductService(app, "product-service", {
   catalogItemsQueue: importService.catalogItemsQueue,
 });
-
-new AuthServiceStack(app, "auth-service", {});
 
 app.synth();
