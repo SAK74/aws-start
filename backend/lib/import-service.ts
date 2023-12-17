@@ -33,6 +33,15 @@ export class ImportServiceStack extends cdk.Stack {
         stageName: "dev",
       },
       description: "Get upload-to-S3 URL",
+      // defaultMethodOptions: {},
+    });
+
+    new apigateway.GatewayResponse(this, "gateway-response", {
+      restApi: api,
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        ["Access-Control-Allow-Origin"]: "'*'",
+      },
     });
 
     const importProductLambda = new lambda.Function(this, "get-upload-url", {
@@ -87,6 +96,7 @@ export class ImportServiceStack extends cdk.Stack {
           cdk.Fn.importValue("AuthStack:AuthorizerId")
         ),
         identitySource: "method.request.header.Authorization",
+        resultsCacheTtl: cdk.Duration.minutes(0),
       }
     );
 
@@ -95,6 +105,7 @@ export class ImportServiceStack extends cdk.Stack {
     });
     importResource.addMethod("GET", lambdaIntegration, {
       authorizer,
+      // methodResponses:[]
     });
   }
 }
