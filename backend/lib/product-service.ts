@@ -3,6 +3,9 @@ import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as gatewayapi from "aws-cdk-lib/aws-apigateway";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as sns from "aws-cdk-lib/aws-sns";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export const cors: gatewayapi.CorsOptions = {
   allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
@@ -18,13 +21,25 @@ export const cors: gatewayapi.CorsOptions = {
   allowCredentials: true,
 };
 
+export const sharedLambdaProps: Omit<
+  cdk.aws_lambda.FunctionProps,
+  "handler" | "code"
+> = {
+  runtime: lambda.Runtime.NODEJS_18_X,
+};
+
+interface ProductsServiceProps extends cdk.StackProps {
+  catalogItemsQueue: sqs.Queue;
+}
+
 export class ProductService extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: ProductsServiceProps) {
     super(scope, id, props);
 
     const getProductList = new lambda.Function(this, "get-products-list", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist/getProductsList"),
+
       handler: "getProductsList.handler",
     });
 
@@ -49,8 +64,9 @@ export class ProductService extends cdk.Stack {
     productsList.addCorsPreflight(cors);
 
     const getProductById = new lambda.Function(this, "get product-by-id", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist/getProductById"),
+
       handler: "getProductById.handler",
     });
 
@@ -68,8 +84,9 @@ export class ProductService extends cdk.Stack {
     productById.addCorsPreflight(cors);
 
     const createProduct = new lambda.Function(this, "create-product", {
-      runtime: lambda.Runtime.NODEJS_18_X,
-      code: lambda.Code.fromAsset("resources"),
+      ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist/createProduct"),
+
       handler: "createProduct.handler",
     });
 
@@ -84,12 +101,58 @@ export class ProductService extends cdk.Stack {
 
     productsList.addMethod("POST", createProductIntegration);
 
-    const policy = iam.ManagedPolicy.fromAwsManagedPolicyName(
-      "AmazonDynamoDBFullAccess"
+    const productTopic = new sns.Topic(this, "create-product-topic", {});
+
+    new sns.Subscription(this, "main-mail-subscription", {
+      topic: productTopic,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      endpoint: process.env.SUBSCRIBED_EMAIL1 || "",
+    });
+
+    new sns.Subscription(this, "additional-mail-subscription", {
+      topic: productTopic,
+      protocol: sns.SubscriptionProtocol.EMAIL,
+      endpoint: process.env.SUBSCRIBED_EMAIL2 || "",
+      filterPolicy: {
+        price: sns.SubscriptionFilter.numericFilter({ lessThan: 30 }),
+        count: sns.SubscriptionFilter.numericFilter({ greaterThan: 10 }),
+      },
+    });
+
+    const catalogItemsQueue = props.catalogItemsQueue;
+
+    const catalogBatchProcessLambda = new lambda.Function(
+      this,
+      "catalog-batch-process",
+      {
+        ...sharedLambdaProps,
+        code: lambda.Code.fromAsset("dist/catalogBatchProcess"),
+        handler: "catalogBatchProcess.handler",
+        environment: {
+          QUEUE_URL: catalogItemsQueue.queueUrl,
+          TOPIC_ARN: productTopic.topicArn,
+        },
+      }
     );
 
-    [getProductList, getProductById, createProduct].forEach((lambda) => {
-      lambda.role?.addManagedPolicy(policy);
+    catalogItemsQueue.grantConsumeMessages(catalogBatchProcessLambda);
+
+    productTopic.grantPublish(catalogBatchProcessLambda);
+
+    catalogBatchProcessLambda.addEventSource(
+      new SqsEventSource(catalogItemsQueue, { batchSize: 5 })
+    );
+
+    const dbAccessPolicy = iam.ManagedPolicy.fromAwsManagedPolicyName(
+      "AmazonDynamoDBFullAccess"
+    );
+    [
+      getProductList,
+      getProductById,
+      createProduct,
+      catalogBatchProcessLambda,
+    ].forEach((lambda) => {
+      lambda.role?.addManagedPolicy(dbAccessPolicy);
       lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");
       lambda.addEnvironment("STOCK_TABLE_NAME", "Stock");
     });

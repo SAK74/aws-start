@@ -4,7 +4,7 @@ import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 const client = new DynamoDBClient({ region: "eu-north-1" });
 const documentClient = DynamoDBDocumentClient.from(client);
 
-export const getProductCount = async (id) =>
+export const getProductCount = async (id: string) =>
   (
     await documentClient.send(
       new GetCommand({
@@ -12,4 +12,4 @@ export const getProductCount = async (id) =>
         Key: { product_id: id },
       })
     )
-  ).Item.count;
+  ).Item?.count;

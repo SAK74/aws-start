@@ -8,9 +8,19 @@ import { S3Event } from "aws-lambda";
 import csv from "csv-parser";
 import { Readable } from "stream";
 import { finished } from "node:stream/promises";
+import { SQSClient, SendMessageBatchCommand } from "@aws-sdk/client-sqs";
 
 const REGION = process.env.REGION;
 const PARSE_DIR = process.env.PARSE_DIR;
+
+const sqsClient = new SQSClient();
+
+const maxBatchSize = 10;
+
+const splitArray: <T>(arr: T[], size: number) => T[][] = (arr, size) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (_, i) =>
+    arr.slice(i * size, i * size + size)
+  );
 
 export const handler = async (event: S3Event) => {
   try {
@@ -24,17 +34,35 @@ export const handler = async (event: S3Event) => {
     const sourceFile = await client.send(
       new GetObjectCommand({ Bucket: name, Key: key })
     );
-    const body = await sourceFile.Body?.transformToString();
+    const body = sourceFile.Body;
     if (body) {
-      const results: string[] = [];
+      const results: Record<string, any>[] = [];
       await finished(
-        Readable.from(body)
-          .pipe(csv())
-          .on("data", (data) => {
-            results.push(data);
-          })
+        (body as Readable).pipe(csv()).on("data", (data) => {
+          // console.log("in stream", data);
+          results.push(data);
+        })
       );
       console.log("Result: ", results);
+
+      // assurance max batch size
+      const splitedArray =
+        results.length > maxBatchSize
+          ? splitArray(results, maxBatchSize)
+          : [results];
+
+      for (const part of splitedArray) {
+        await sqsClient.send(
+          new SendMessageBatchCommand({
+            QueueUrl: process.env.QUEUE_URL,
+            Entries: part.map((el, i) => ({
+              Id: i.toString(),
+              MessageBody: JSON.stringify(el),
+            })),
+          })
+        );
+        console.log("Sent messages to queue!");
+      }
 
       await client.send(
         new CopyObjectCommand({

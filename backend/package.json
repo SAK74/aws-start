@@ -8,17 +8,21 @@
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
+    "test:watch":"jest --watch",
     "cdk": "cdk",
     "deploy:products": "cdk deploy product-service",
     "deploy:import": "cdk deploy import-service",
     "deploy:all": "cdk deploy --all",
     "db:create": "ts-node --prefer-ts-exts db/create.ts",
     "db:fill": "ts-node --prefer-ts-exts db/fill.ts",
-    "predeploy:import": "ts-node builder.ts"
+    "predeploy:import": "ts-node builder.ts type=import",
+    "predeploy:products": "ts-node builder.ts type=products",
+    "predeploy:all": "ts-node builder.ts type=import,products"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.454.0",
     "@aws-sdk/client-s3": "^3.465.0",
+    "@aws-sdk/client-sns": "^3.470.0",
     "@aws-sdk/lib-dynamodb": "^3.454.0",
     "@aws-sdk/s3-request-presigner": "^3.465.0",
     "@types/aws-lambda": "^8.10.126",
@@ -35,6 +39,7 @@
   "dependencies": {
     "aws-cdk-lib": "2.106.1",
     "constructs": "^10.0.0",
+    "dotenv": "^16.3.1",
     "source-map-support": "^0.5.21"
   }
 }
