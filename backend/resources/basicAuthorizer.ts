@@ -12,7 +12,7 @@ export const handler: APIGatewayAuthorizerHandler = async (event) => {
   const splitedToken = (
     event as APIGatewayTokenAuthorizerEvent
   ).authorizationToken.split(" ");
-  if (!splitedToken[0].startsWith("Basic")) {
+  if (!splitedToken[0].startsWith("Basic") || !splitedToken[1]) {
     return createResponse(false, event.methodArn);
   }
 

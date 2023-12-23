@@ -5,6 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { cors, sharedLambdaProps } from "./product-service";
 import { Bucket, HttpMethods, EventType } from "aws-cdk-lib/aws-s3";
 import { Queue } from "aws-cdk-lib/aws-sqs";
+// import * as iam from "aws-cdk-lib/aws-iam";
 
 const UPLOAD_DIR = "uploaded";
 const REGION = "eu-north-1";
@@ -85,6 +86,20 @@ export class ImportServiceStack extends cdk.Stack {
       importProductLambda,
       {}
     );
+
+    // const assumeRole = new iam.Role(this, "authRole", {
+    //   assumedBy: new iam.ServicePrincipal("apigateway.amazonaws.com"),
+    //   inlinePolicies: {
+    //     invoke_lambda: new iam.PolicyDocument({
+    //       statements: [
+    //         new iam.PolicyStatement({
+    //           actions: ["lambda:InvokeFunction"],
+    //           resources: [cdk.Fn.importValue("AuthStack:AuthorizerId")],
+    //         }),
+    //       ],
+    //     }),
+    //   },
+    // });
 
     const authorizer = new apigateway.TokenAuthorizer(
       this,
