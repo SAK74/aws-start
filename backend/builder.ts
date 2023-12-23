@@ -42,7 +42,27 @@ type.forEach((type) => {
     case "auth":
       buildHandlers("basicAuthorizer");
       break;
+    case "rds":
+      buildNestLambda();
+      break;
     default:
       throw new Error("Wrong type on builder!");
   }
 });
+
+async function buildNestLambda() {
+  console.log("build nest-lambda handler: ");
+  await esbuild.build({
+    entryPoints: [`./nest-rds/src/main.ts`],
+    tsconfig: "./tsconfig.builder.json",
+    bundle: true,
+    platform: "node",
+    outdir: `dist/nest-rds`,
+    external: [
+      "class-transformer",
+      "@nestjs/microservices",
+      "class-validator",
+      "@nestjs/websockets/socket-module",
+    ],
+  });
+}

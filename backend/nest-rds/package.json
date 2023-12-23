@@ -37,6 +37,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@codegenie/serverless-express": "^4.13.0",
     "@nestjs/cli": "^10.0.3",
     "@nestjs/schematics": "^10.0.1",
     "@nestjs/testing": "^10.0.3",
@@ -48,6 +49,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "5.60.0",
     "@typescript-eslint/parser": "5.60.0",
+    "aws-lambda": "^1.0.7",
     "eslint": "8.43.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-import": "^2.27.5",
