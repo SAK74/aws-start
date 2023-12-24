@@ -5,6 +5,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { cors, sharedLambdaProps } from "./product-service";
 import { Bucket, HttpMethods, EventType } from "aws-cdk-lib/aws-s3";
 import { Queue } from "aws-cdk-lib/aws-sqs";
+// import * as iam from "aws-cdk-lib/aws-iam";
 
 const UPLOAD_DIR = "uploaded";
 const REGION = "eu-north-1";
@@ -12,6 +13,7 @@ const PARSE_DIR = "parsed";
 
 export class ImportServiceStack extends cdk.Stack {
   catalogItemsQueue: Queue;
+
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -32,6 +34,15 @@ export class ImportServiceStack extends cdk.Stack {
         stageName: "dev",
       },
       description: "Get upload-to-S3 URL",
+      // defaultMethodOptions: {},
+    });
+
+    new apigateway.GatewayResponse(this, "gateway-response", {
+      restApi: api,
+      type: apigateway.ResponseType.DEFAULT_4XX,
+      responseHeaders: {
+        ["Access-Control-Allow-Origin"]: "'*'",
+      },
     });
 
     const importProductLambda = new lambda.Function(this, "get-upload-url", {
@@ -76,9 +87,40 @@ export class ImportServiceStack extends cdk.Stack {
       {}
     );
 
+    // const assumeRole = new iam.Role(this, "authRole", {
+    //   assumedBy: new iam.ServicePrincipal("apigateway.amazonaws.com"),
+    //   inlinePolicies: {
+    //     invoke_lambda: new iam.PolicyDocument({
+    //       statements: [
+    //         new iam.PolicyStatement({
+    //           actions: ["lambda:InvokeFunction"],
+    //           resources: [cdk.Fn.importValue("AuthStack:AuthorizerId")],
+    //         }),
+    //       ],
+    //     }),
+    //   },
+    // });
+
+    const authorizer = new apigateway.TokenAuthorizer(
+      this,
+      "simply-authorizer",
+      {
+        handler: lambda.Function.fromFunctionArn(
+          this,
+          "autorizer-lambda",
+          cdk.Fn.importValue("AuthStack:AuthorizerId")
+        ),
+        identitySource: "method.request.header.Authorization",
+        resultsCacheTtl: cdk.Duration.minutes(0),
+      }
+    );
+
     const importResource = api.root.addResource("import", {
       defaultCorsPreflightOptions: cors,
     });
-    importResource.addMethod("GET", lambdaIntegration, {});
+    importResource.addMethod("GET", lambdaIntegration, {
+      authorizer,
+      // methodResponses:[]
+    });
   }
 }

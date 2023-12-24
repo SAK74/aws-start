@@ -39,6 +39,9 @@ type.forEach((type) => {
         "catalogBatchProcess"
       );
       break;
+    case "auth":
+      buildHandlers("basicAuthorizer");
+      break;
     default:
       throw new Error("Wrong type on builder!");
   }
