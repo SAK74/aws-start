@@ -10,9 +10,19 @@ const main = async () => {
         user_id: randomUUID(),
         status: 'OPEN',
         items: {
-          create: {
-            count: Math.round(Math.random() * 5 + 1),
-          },
+          create: [
+            {
+              count: Math.round(Math.random() * 5 + 1),
+              product: {
+                create: {
+                  id: randomUUID(),
+                  description: 'description' + i,
+                  title: 'title' + i,
+                  price: Math.round(Math.random() * 40 + 10),
+                },
+              },
+            },
+          ],
         },
       },
     });

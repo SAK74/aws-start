@@ -15,7 +15,7 @@ async function bootstrap() {
     origin: (req, callback) => callback(null, true),
   });
   app.use(helmet());
-  await app.listen(port);
+  // await app.listen(port);
 
   app.init();
   const expressApp = app.getHttpAdapter().getInstance();

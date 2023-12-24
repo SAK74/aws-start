@@ -3,53 +3,94 @@ import { Injectable } from '@nestjs/common';
 import { v4 } from 'uuid';
 
 import { Cart } from '../models';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class CartService {
-  private userCarts: Record<string, Cart> = {};
+  // private userCarts: Record<string, Cart> = {};
+  constructor(private readonly prisma: PrismaService) {}
 
-  findByUserId(userId: string): Cart {
-    return this.userCarts[ userId ];
+  async findByUserId(userId: string): Promise<Cart> {
+    console.log(userId);
+    // return this.userCarts[userId];
+    const cart = await this.prisma.cart.findUniqueOrThrow({
+      where: {
+        user_id: userId,
+      },
+      include: { items: { include: { product: true } } },
+    });
+    console.log(cart);
+    return cart;
   }
 
-  createByUserId(userId: string) {
+  async createByUserId(userId: string): Promise<Cart> {
     const id = v4();
-    const userCart = {
-      id,
-      items: [],
-    };
+    // const userCart = {
+    //   id,
+    //   items: [],
+    // };
 
-    this.userCarts[ userId ] = userCart;
+    // this.userCarts[userId] = userCart;
+    const userCart = await this.prisma.cart.create({
+      data: {
+        user_id: userId,
+        status: 'OPEN',
+      },
+    });
 
-    return userCart;
+    return { ...userCart, items: [] };
   }
 
-  findOrCreateByUserId(userId: string): Cart {
-    const userCart = this.findByUserId(userId);
-
-    if (userCart) {
+  async findOrCreateByUserId(userId: string): Promise<Cart> {
+    // if (userCart) {
+    //   // return userCart;
+    // }
+    try {
+      const userCart = await this.findByUserId(userId);
       return userCart;
+    } catch {
+      return this.createByUserId(userId);
     }
-
-    return this.createByUserId(userId);
   }
 
-  updateByUserId(userId: string, { items }: Cart): Cart {
-    const { id, ...rest } = this.findOrCreateByUserId(userId);
+  async updateByUserId(userId: string, { items }: Cart): Promise<Cart> {
+    const { id, ...rest } = await this.findOrCreateByUserId(userId);
 
-    const updatedCart = {
-      id,
-      ...rest,
-      items: [ ...items ],
-    }
+    // const updatedCart = {
+    //   id,
+    //   ...rest,
+    //   items: [...items],
+    // };
 
-    this.userCarts[ userId ] = { ...updatedCart };
-
-    return { ...updatedCart };
+    // this.userCarts[userId] = { ...updatedCart };
+    const updatedCart = await this.prisma.cart.upsert({
+      where: {
+        user_id: userId,
+      },
+      create: {
+        status: 'OPEN',
+        user_id: userId,
+      },
+      update: {
+        items: {
+          create: items.map((item) => ({
+            ...item,
+            product_id: item.product.id,
+          })),
+        },
+      },
+      include: { items: { include: { product: true } } },
+    });
+    console.log(updatedCart);
+    return updatedCart;
   }
 
-  removeByUserId(userId): void {
-    this.userCarts[ userId ] = null;
+  async removeByUserId(userId): Promise<void> {
+    // this.userCarts[userId] = null;
+    await this.prisma.cart.delete({
+      where: {
+        user_id: userId,
+      },
+    });
   }
-
 }

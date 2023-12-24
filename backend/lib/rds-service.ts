@@ -3,9 +3,7 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { cors, sharedLambdaProps } from "./product-service";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-// import { HttpMethod } from "aws-cdk-lib/aws-events";
-import * as path from "path";
+// import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 
 export class RDSServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -13,7 +11,7 @@ export class RDSServiceStack extends Stack {
 
     const lambdaHandler = new lambda.Function(this, "nest-handler", {
       ...sharedLambdaProps,
-      code: lambda.Code.fromAsset("dist/nest-rds"),
+      code: lambda.Code.fromAsset("dist/nest-rds"), // nest-rds/dist
       handler: "main.handler",
     });
 
@@ -24,13 +22,15 @@ export class RDSServiceStack extends Stack {
     // });
 
     const api = new apigw.RestApi(this, "nest-access-api", {
-      // defaultIntegration: new apigw.LambdaIntegration(lambdaHandler, {}),
-      defaultCorsPreflightOptions: cors,
       deployOptions: {
         stageName: "dev",
       },
     });
-    api.root.addMethod("ANY", new apigw.LambdaIntegration(lambdaHandler, {}));
-    api.root.addProxy();
+
+    api.root.addProxy({
+      defaultIntegration: new apigw.LambdaIntegration(lambdaHandler),
+      anyMethod: true,
+      defaultCorsPreflightOptions: cors,
+    });
   }
 }
