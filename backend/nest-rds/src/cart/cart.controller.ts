@@ -101,9 +101,10 @@ export class CartController {
       userId,
       cartId,
       items,
-      total: 12,
+      total,
     });
-    this.cartService.removeByUserId(userId);
+    // this.cartService.removeByUserId(userId);
+    this.cartService.setStatusById(cartId, 'ORDERED');
 
     return {
       statusCode: HttpStatus.OK,

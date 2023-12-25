@@ -23,11 +23,13 @@ enum Status {
 }
 
 model Cart_Item {
-  product_id String  @unique @db.Uuid
-  cart_id    String  @db.Uuid
-  count      Int
-  cart       Cart    @relation(fields: [cart_id], references: [id])
-  product    Product @relation(fields: [product_id], references: [id], onUpdate: Cascade)
+  product_id   String  @unique @db.Uuid
+  cart_id      String  @db.Uuid
+  count        Int
+  cart         Cart    @relation(fields: [cart_id], references: [id])
+  product      Product @relation(fields: [product_id], references: [id], onUpdate: Cascade)
+  Order        Order?  @relation(fields: [orderUser_id], references: [userId])
+  orderUser_id String? @db.Uuid
 }
 
 model Product {
@@ -39,18 +41,19 @@ model Product {
 }
 
 model Order {
-  id       String       @default(uuid()) @db.Uuid
-  user_id  String       @unique @db.Uuid
-  cart_id  String       @unique @db.Uuid
+  id       String        @id @default(uuid()) @db.Uuid
+  userId   String        @unique @db.Uuid
+  cartId   String        @unique @db.Uuid
+  items    Cart_Item[]
   payment  Json
   delivery Json
-  comments String       @db.Text
-  status   Order_Status
+  comments String        @db.Text
+  status   Order_Status?
   total    Int
 }
 
 enum Order_Status {
   ORDERED
-  IN_PROCESS
+  IN_PROGRESS
   DELIVERED
 }
