@@ -13,14 +13,7 @@ const main = async () => {
           create: [
             {
               count: Math.round(Math.random() * 5 + 1),
-              product: {
-                create: {
-                  id: randomUUID(),
-                  description: 'description' + i,
-                  title: 'title' + i,
-                  price: Math.round(Math.random() * 40 + 10),
-                },
-              },
+              product_id: randomUUID(),
             },
           ],
         },

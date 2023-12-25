@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { v4 } from 'uuid';
 
@@ -54,7 +54,7 @@ export class CartService {
   }
 
   async updateByUserId(userId: string, { items }: Cart): Promise<Cart> {
-    const { id, ...rest } = await this.findOrCreateByUserId(userId);
+    // const { id, ...rest } = await this.findOrCreateByUserId(userId);
 
     // const updatedCart = {
     //   id,
@@ -63,6 +63,15 @@ export class CartService {
     // };
 
     // this.userCarts[userId] = { ...updatedCart };
+
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: items.map((item) => item.product.id) } },
+    });
+
+    if (!products.length) {
+      throw new NotFoundException('NO product found...');
+    }
+
     const updatedCart = await this.prisma.cart.upsert({
       where: {
         user_id: userId,
@@ -73,10 +82,16 @@ export class CartService {
       },
       update: {
         items: {
-          create: items.map((item) => ({
-            ...item,
-            product_id: item.product.id,
-          })),
+          create: items.map((item) => {
+            const {
+              product: { id },
+              count,
+            } = item;
+            return {
+              count,
+              product_id: id,
+            };
+          }),
         },
       },
       include: { items: { include: { product: true } } },

@@ -27,13 +27,30 @@ model Cart_Item {
   cart_id    String  @db.Uuid
   count      Int
   cart       Cart    @relation(fields: [cart_id], references: [id])
-  product    Product @relation(fields: [product_id], references: [id])
+  product    Product @relation(fields: [product_id], references: [id], onUpdate: Cascade)
 }
 
 model Product {
-  id          String     @unique @db.Uuid
+  id          String     @id @db.Uuid
   title       String
   description String
   price       Int
   cart        Cart_Item?
+}
+
+model Order {
+  id       String       @default(uuid()) @db.Uuid
+  user_id  String       @unique @db.Uuid
+  cart_id  String       @unique @db.Uuid
+  payment  Json
+  delivery Json
+  comments String       @db.Text
+  status   Order_Status
+  total    Int
+}
+
+enum Order_Status {
+  ORDERED
+  IN_PROCESS
+  DELIVERED
 }
