@@ -15,18 +15,19 @@ async function bootstrap() {
     origin: (req, callback) => callback(null, true),
   });
   app.use(helmet());
-  // await app.listen(port);
 
-  app.init();
-  const expressApp = app.getHttpAdapter().getInstance();
-  return serverlessExpress({ app: expressApp });
+  await app.listen(port);
+
+  // app.init();
+  // const expressApp = app.getHttpAdapter().getInstance();
+  // return serverlessExpress({ app: expressApp });
 }
-// bootstrap().then(() => {
-//   console.log('App is running on %s port', port);
-// });
+bootstrap().then(() => {
+  console.log('App is running on %s port', port);
+});
 
-let server: Handler;
-export const handler: Handler = async (event, context, cb) => {
-  server = server ?? (await bootstrap());
-  return server(event, context, cb);
-};
+// let server: Handler;
+// export const handler: Handler = async (event, context, cb) => {
+//   server = server ?? (await bootstrap());
+//   return server(event, context, cb);
+// };
