@@ -3,7 +3,6 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { cors, sharedLambdaProps } from "./product-service";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
-// import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 
 export class RDSServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -13,13 +12,10 @@ export class RDSServiceStack extends Stack {
       ...sharedLambdaProps,
       code: lambda.Code.fromAsset("dist/nest-rds"), // nest-rds/dist
       handler: "main.handler",
+      environment: {
+        DATABASE_URL: process.env.DATABASE_URL || "",
+      },
     });
-
-    // const lambdaHandler = new NodejsFunction(this, "nest-handler", {
-    //   ...sharedLambdaProps,
-    //   entry: path.resolve(__dirname, "../nest-rds/src/main.ts"),
-    //   handler: "handler",
-    // });
 
     const api = new apigw.RestApi(this, "nest-access-api", {
       deployOptions: {

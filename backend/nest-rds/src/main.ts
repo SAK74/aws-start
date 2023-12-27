@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { Handler } from 'aws-lambda';
 
+import 'dotenv/config';
+
 const port = process.env.PORT || 4000;
 
 async function bootstrap() {
@@ -16,18 +18,26 @@ async function bootstrap() {
   });
   app.use(helmet());
 
-  // await app.listen(port);
-
-  app.init();
-  const expressApp = app.getHttpAdapter().getInstance();
-  return serverlessExpress({ app: expressApp });
+  if (process.env.NODE_ENV === 'dev') {
+    await app.listen(port);
+  } else {
+    app.init();
+    const expressApp = app.getHttpAdapter().getInstance();
+    return serverlessExpress({ app: expressApp });
+  }
 }
-// bootstrap().then(() => {
-//   console.log('App is running on %s port', port);
-// });
+if (process.env.NODE_ENV === 'dev') {
+  bootstrap().then(() => {
+    console.log('App is running on %s port', port);
+  });
+}
 
 let server: Handler;
 export const handler: Handler = async (event, context, cb) => {
-  server = server ?? (await bootstrap());
-  return server(event, context, cb);
+  if (process.env.NODE_ENV === 'dev') {
+    return undefined;
+  } else {
+    server = server ?? (await bootstrap());
+    return server(event, context, cb);
+  }
 };

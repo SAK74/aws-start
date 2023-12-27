@@ -10,7 +10,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 
-// import { BasicAuthGuard, JwtAuthGuard } from '../auth';
+import { BasicAuthGuard, JwtAuthGuard } from '../auth';
 import { OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 
@@ -18,6 +18,7 @@ import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
 
 @Controller('api/profile/cart')
+@UseGuards(BasicAuthGuard)
 export class CartController {
   constructor(
     private cartService: CartService,
