@@ -16,6 +16,7 @@ model Cart {
   status     Card_Status @default(OPEN)
   items      Cart_Item[]
   order      Order[]
+  User       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 enum Card_Status {
@@ -30,8 +31,8 @@ model Cart_Item {
   cart       Cart    @relation(fields: [cart_id], references: [id])
   product    Product @relation(fields: [product_id], references: [id])
 
-  Order        Order?  @relation(fields: [orderUser_id], references: [userId])
-  orderUser_id String? @db.Uuid
+  Order    Order?  @relation(fields: [order_id], references: [id])
+  order_id String? @db.Uuid
 
   @@id([cart_id])
 }
@@ -45,8 +46,7 @@ model Product {
 }
 
 model Order {
-  id       String        @id @default(uuid()) @db.Uuid
-  userId   String        @unique @db.Uuid
+  userId   String        @unique
   cartId   String        @unique @db.Uuid
   cart     Cart          @relation(fields: [cartId], references: [id])
   items    Cart_Item[]
@@ -55,10 +55,22 @@ model Order {
   comments String        @db.Text
   status   Order_Status?
   total    Float
+  User     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  id String @id @default(uuid()) @db.Uuid
 }
 
 enum Order_Status {
   ORDERED
   IN_PROGRESS
   DELIVERED
+}
+
+model User {
+  id       String  @id
+  name     String  @unique
+  email    String? @unique
+  password String  @unique
+  cart     Cart[]
+  order    Order[]
 }

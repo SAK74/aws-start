@@ -1,9 +1,18 @@
 import { PrismaClient } from '@prisma/client';
-import { randomUUID } from 'crypto';
+// import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
 const main = async () => {
+  const testUser = await prisma.user.create({
+    data: {
+      id: 'Test user 1',
+      name: 'Test user 1',
+      email: 'example@email.com',
+      password: '***',
+    },
+  });
+
   const products: string[] = Array(10).fill(null);
   for (let i = 0; i < products.length; i += 1) {
     const { id } = await prisma.product.create({
@@ -18,7 +27,7 @@ const main = async () => {
   for (let i = 0; i < 3; i += 1) {
     await prisma.cart.create({
       data: {
-        user_id: randomUUID(),
+        user_id: testUser.id,
         // status: 'OPEN',
         items: {
           create: [
