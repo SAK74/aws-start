@@ -33,8 +33,15 @@ export class OrderService {
     // this.orders[id] = order;
 
     // return order;
-    const createdOrder = await this.prisma.order.create({
-      data: order,
+    // const createdOrder = await this.prisma.order.create({
+    //   data: order,
+    // });
+    return this.prisma.$transaction((tx) => {
+      tx.cart.update({
+        where: { id: data.cartId },
+        data: { status: 'ORDERED' },
+      });
+      return tx.order.create({ data: order });
     });
   }
 

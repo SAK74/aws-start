@@ -109,10 +109,10 @@ export class CartService {
     });
   }
 
-  async setStatusById(id: string, status: Cart['status']) {
-    await this.prisma.cart.update({
-      where: { id },
-      data: { status },
-    });
-  }
+  // async setStatusById(id: string, status: Cart['status']) {
+  //   await this.prisma.cart.update({
+  //     where: { id },
+  //     data: { status },
+  //   });
+  // }
 }
