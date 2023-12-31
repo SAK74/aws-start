@@ -11,7 +11,6 @@ export class CartService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findByUserId(userId: string): Promise<Cart> {
-    console.log(userId);
     // return this.userCarts[userId];
     const cart = await this.prisma.cart.findUniqueOrThrow({
       where: {

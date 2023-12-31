@@ -1,4 +1,5 @@
 import webpack from 'webpack';
+import TerserPlugin from 'terser-webpack-plugin';
 /**
  * @param {webpack.Configuration} options
  * @param {webpack} webpack
@@ -31,6 +32,15 @@ module.exports = (options, webpack) => {
     output: {
       ...options.output,
       libraryTarget: 'commonjs2',
+    },
+    optimization: {
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            keep_classnames: true,
+          },
+        }),
+      ],
     },
   };
 };

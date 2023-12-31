@@ -1,0 +1,18 @@
+# modules will mgenerate inside docker container
+node_modules
+dist
+
+# testing tools
+test
+**/*.(test|spec).(ts|js)
+
+
+# configuration files
+.dockerignore
+.gitignore
+.prettierrc
+Dockerfile
+nest-cli.json
+
+# docs
+*.md

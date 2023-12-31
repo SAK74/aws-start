@@ -12,6 +12,7 @@ const main = async () => {
       password: '***',
     },
   });
+  console.log('User: ', testUser);
 
   const products: string[] = Array(10).fill(null);
   for (let i = 0; i < products.length; i += 1) {
@@ -24,22 +25,22 @@ const main = async () => {
     });
     products[i] = id;
   }
-  for (let i = 0; i < 3; i += 1) {
-    await prisma.cart.create({
-      data: {
-        user_id: testUser.id,
-        // status: 'OPEN',
-        items: {
-          create: [
-            {
-              count: Math.round(Math.random() * 5 + 1),
-              product_id: products[i * 2],
-            },
-          ],
-        },
+  // for (let i = 0; i < 3; i += 1) {
+  await prisma.cart.create({
+    data: {
+      user_id: testUser.id,
+      // status: 'OPEN',
+      items: {
+        create: [
+          {
+            count: Math.round(Math.random() * 5 + 1),
+            product_id: products[2],
+          },
+        ],
       },
-    });
-  }
+    },
+  });
+  // }
 };
 
 main()

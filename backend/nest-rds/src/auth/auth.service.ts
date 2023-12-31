@@ -8,17 +8,17 @@ import { contentSecurityPolicy } from 'helmet';
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
-  validateUser(name: string, password: string): any {
-    const user = this.usersService.findOne(name);
+  async validateUser(name: string, password: string): Promise<any> {
+    const user = await this.usersService.findOne(name);
 
     if (user) {
       return user;
     }
 
-    return this.usersService.createOne({ name, password })
+    return await this.usersService.createOne({ name, password });
   }
 
   login(user: User, type) {
@@ -26,8 +26,8 @@ export class AuthService {
       jwt: this.loginJWT,
       basic: this.loginBasic,
       default: this.loginJWT,
-    }
-    const login = LOGIN_MAP[ type ]
+    };
+    const login = LOGIN_MAP[type];
 
     return login ? login(user) : LOGIN_MAP.default(user);
   }
@@ -43,7 +43,6 @@ export class AuthService {
 
   loginBasic(user: User) {
     // const payload = { username: user.name, sub: user.id };
-    console.log(user);
 
     function encodeUserToken(user) {
       const { id, name, password } = user;
@@ -57,7 +56,4 @@ export class AuthService {
       access_token: encodeUserToken(user),
     };
   }
-
-
-
 }
