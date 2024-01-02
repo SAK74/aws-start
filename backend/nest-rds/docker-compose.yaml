@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: cart-api
+    build: ./
+    ports:
+      - ${PORT}:${PORT}
+    env_file:
+      - .env
