@@ -13,6 +13,8 @@ test
 .prettierrc
 Dockerfile
 nest-cli.json
+.elasticbeanstalk/*
+
 
 # docs
 *.md
