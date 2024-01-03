@@ -1,4 +1,4 @@
-# modules will mgenerate inside docker container
+# modules will generate inside docker container
 node_modules
 dist
 
@@ -15,6 +15,8 @@ Dockerfile
 nest-cli.json
 .elasticbeanstalk/*
 
+# env files
+.env*
 
 # docs
 *.md
