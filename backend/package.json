@@ -20,7 +20,10 @@
     "predeploy:all": "ts-node builder.ts type=import,products,auth",
     "deploy:auth": "cdk deploy auth-service",
     "predeploy:auth": "ts-node builder.ts type=auth",
-    "token:generate": "ts-node encode.util.ts"
+    "token:generate": "ts-node encode.util.ts",
+    "deploy:rds": "cdk deploy nest-rds-service",
+    "predeploy:rds": "ts-node builder.ts type=rds",
+    "prisma:migrate": "npm run --prefix nest-rds prisma:migrate"
   },
   "devDependencies": {
     "@aws-sdk/client-dynamodb": "^3.454.0",
