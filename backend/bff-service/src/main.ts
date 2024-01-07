@@ -1,6 +1,8 @@
 import http, { RequestOptions } from "http";
 import https from "https";
 
+import cached from "./cacheData";
+
 if (process.env.NODE_ENV === "development") {
   require("dotenv").config();
 }
@@ -22,13 +24,22 @@ const server = http.createServer((req, resp) => {
     const recipient = req.url?.split("/")[1].split("?")[0];
     const recipientUrl = process.env[recipient || ""];
     // console.log("recipient url: ", recipientUrl);
+    const outgoingReqPath = req.url?.replace(`/${recipient}`, "");
 
     if (!recipientUrl) {
       resp.statusCode = 502;
       resp.statusMessage = ERROR_502;
       resp.end(JSON.stringify({ message: ERROR_502 }));
+    } else if (
+      recipient === "product" &&
+      req.method === "GET" &&
+      !outgoingReqPath &&
+      cached.cacheData
+    ) {
+      resp.statusCode = 200;
+      resp.end(cached.cacheData);
     } else {
-      const outgoingReqPath = req.url?.replace(`/${recipient}`, "");
+      let stream: NodeJS.WritableStream;
 
       const httpModule = recipient === "cart" ? http : https;
 
@@ -52,17 +63,25 @@ const server = http.createServer((req, resp) => {
             const status = outResp.statusCode || 500;
             // console.log("Status: ", status, outResp.statusMessage);
             resp.statusCode = status;
+
             outResp.on("data", (data) => {
               // console.log("Data: ", data.toString());
+              if (recipient === "product" && req.method === "GET") {
+                stream = cached.createStream();
+                stream.write(data);
+              }
+
               resp.write(data);
             });
             outResp.on("error", (err) => {
-              console.log("Error: ", err.message);
+              // console.log("Error: ", err.message);
               resp.write(err.message || http.STATUS_CODES[status]);
               resp.end();
             });
             outResp.on("end", () => {
-              // resp.statusCode = status;
+              if (recipient === "product" && req.method === "GET") {
+                stream.end();
+              }
               resp.end();
             });
           }
@@ -72,7 +91,7 @@ const server = http.createServer((req, resp) => {
         }
 
         outgoingReq.on("error", (error) => {
-          console.log("Error: ", error.message);
+          // console.log("Error: ", error.message);
           resp.statusCode = 400; //
           resp.statusMessage = http.STATUS_CODES[400] || "";
           resp.end(error.message);
@@ -81,7 +100,7 @@ const server = http.createServer((req, resp) => {
       });
     }
   } catch (err) {
-    console.log(err);
+    // console.log(err);
     resp.statusCode = 500;
     resp.end((err as Error).message);
   }
