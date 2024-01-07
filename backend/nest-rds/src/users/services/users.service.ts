@@ -20,11 +20,11 @@ export class UsersService {
 
   async createOne({ name, password, email }: User): Promise<User> {
     const id = v4();
-    const newUser = { id: name || id, name, password };
+    const newUser = { id: name || id, name, password, email };
 
     // this.users[ id ] = newUser;
-    await this.prisma.user.create({ data: { id, name, password, email } });
+    return await this.prisma.user.create({ data: newUser });
 
-    return newUser;
+    // return newUser;
   }
 }

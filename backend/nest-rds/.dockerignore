@@ -1,0 +1,22 @@
+# modules will generate inside docker container
+node_modules
+dist
+
+# testing tools
+test
+**/*.(test|spec).(ts|js)
+
+
+# configuration files
+.dockerignore
+.gitignore
+.prettierrc
+Dockerfile
+nest-cli.json
+.elasticbeanstalk/*
+
+# env files
+.env*
+
+# docs
+*.md

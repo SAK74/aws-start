@@ -53,14 +53,20 @@ CREATE TABLE "Order" (
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
+    "email" TEXT,
     "password" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Cart_user_id_key" ON "Cart"("user_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Cart_Item_product_id_key" ON "Cart_Item"("product_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Order_userId_key" ON "Order"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Order_cartId_key" ON "Order"("cartId");
