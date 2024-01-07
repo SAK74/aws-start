@@ -4,8 +4,7 @@
   "description": "learn_aws_eb",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node main.js",
+    "start": "node dist/main.js",
     "start:dev": "cross-env NODE_ENV=development concurrently -k \"tsc --watch\" \"nodemon dist/main.js\""
   },
   "author": "sak74",
