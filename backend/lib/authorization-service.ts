@@ -3,6 +3,7 @@ import { Construct } from "constructs";
 import * as apiGateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { sharedLambdaProps } from "./product-service";
+import { ServicePrincipal } from "aws-cdk-lib/aws-iam";
 
 export class AuthServiceStack extends cdk.Stack {
   authorizer: apiGateway.IAuthorizer;
@@ -21,6 +22,12 @@ export class AuthServiceStack extends cdk.Stack {
         },
       }
     );
+
+    // new lambda.CfnPermission(this,'authorizer-lambda-permision')
+    authorizerLambda.grantInvoke(
+      new ServicePrincipal("apigateway.amazonaws.com")
+    );
+    // authorizerLambda.role?.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName(''))
 
     new cdk.CfnOutput(this, "authorizer-output", {
       value: authorizerLambda.functionArn,

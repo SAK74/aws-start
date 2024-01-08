@@ -122,5 +122,10 @@ export class ImportServiceStack extends cdk.Stack {
       authorizer,
       // methodResponses:[]
     });
+
+    new cdk.CfnOutput(this, "queue-arn", {
+      value: this.catalogItemsQueue.queueArn,
+      exportName: "ImportService:QueueArn",
+    });
   }
 }

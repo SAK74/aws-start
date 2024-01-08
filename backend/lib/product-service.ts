@@ -28,12 +28,12 @@ export const sharedLambdaProps: Omit<
   runtime: lambda.Runtime.NODEJS_18_X,
 };
 
-interface ProductsServiceProps extends cdk.StackProps {
-  catalogItemsQueue: sqs.Queue;
-}
+// interface ProductsServiceProps extends cdk.StackProps {
+//   catalogItemsQueue: sqs.Queue;
+// }
 
 export class ProductService extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ProductsServiceProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const getProductList = new lambda.Function(this, "get-products-list", {
@@ -99,7 +99,7 @@ export class ProductService extends cdk.Stack {
       }
     );
 
-    productsList.addMethod("POST", createProductIntegration);
+    productsList.addMethod("PUT", createProductIntegration);
 
     const productTopic = new sns.Topic(this, "create-product-topic", {});
 
@@ -119,7 +119,12 @@ export class ProductService extends cdk.Stack {
       },
     });
 
-    const catalogItemsQueue = props.catalogItemsQueue;
+    // const catalogItemsQueue = props.catalogItemsQueue;
+    const catalogItemsQueue = sqs.Queue.fromQueueArn(
+      this,
+      "items-queue",
+      cdk.Fn.importValue("ImportService:QueueArn")
+    );
 
     const catalogBatchProcessLambda = new lambda.Function(
       this,
