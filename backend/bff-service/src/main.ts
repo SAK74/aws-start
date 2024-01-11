@@ -1,5 +1,5 @@
-import http, { RequestOptions } from "http";
-import https from "https";
+import * as http from "http";
+import * as https from "https";
 
 import cached from "./cacheData";
 
@@ -48,7 +48,7 @@ const server = http.createServer((req, resp) => {
         body += chunk;
       });
       req.on("end", () => {
-        const options: RequestOptions = {
+        const options: http.RequestOptions = {
           method: req.method,
           headers: {},
         };

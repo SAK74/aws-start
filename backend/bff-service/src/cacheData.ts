@@ -6,17 +6,17 @@ class CacheData {
     this.cacheData = "";
   }
 
-  createStream(): NodeJS.WritableStream {
+  createStream(): Writable {
     const stream = new Writable({
-      write: function (
+      write: (
         chunk: string,
         encoding: BufferEncoding,
         callback: (error?: Error | null) => void
-      ) {
+      ) => {
         // console.log("Started!");
-        (this as CacheData).cacheData += chunk;
+        this.cacheData += chunk;
         callback();
-      }.bind(this),
+      },
     });
 
     stream.on("finish", () => {
