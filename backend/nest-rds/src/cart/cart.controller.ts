@@ -8,14 +8,16 @@ import {
   Post,
   UseGuards,
   HttpStatus,
+  // ValidationPipe,
 } from '@nestjs/common';
 
 import { BasicAuthGuard, JwtAuthGuard } from '../auth';
-import { OrderService } from '../order';
+import { OrderPayload, OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 
 import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
+import { CartItem } from './models';
 
 @Controller('api/profile/cart')
 @UseGuards(BasicAuthGuard)
@@ -46,11 +48,12 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   // @UseGuards(BasicAuthGuard)
   @Put()
-  async updateUserCart(@Req() req: AppRequest, @Body() body) {
+  async updateUserCart(@Req() req: AppRequest, @Body() item: CartItem) {
     // TODO: validate body payload...
+    console.log('PUT  body: ', item);
     const cart = await this.cartService.updateByUserId(
       getUserIdFromRequest(req) || 'test_user',
-      body,
+      item,
     );
 
     return {
@@ -80,7 +83,7 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   // @UseGuards(BasicAuthGuard)
   @Post('checkout')
-  async checkout(@Req() req: AppRequest, @Body() body) {
+  async checkout(@Req() req: AppRequest, @Body() body: OrderPayload) {
     const userId = getUserIdFromRequest(req) || 'test_user';
     const cart = await this.cartService.findByUserId(userId);
 
@@ -94,17 +97,12 @@ export class CartController {
       };
     }
 
-    const { id: cartId, items } = cart;
     const total = calculateCartTotal(cart);
     const order = await this.orderService.create({
       ...body, // TODO: validate and pick only necessary data
       userId,
-      cartId,
-      items,
       total,
     });
-    // this.cartService.removeByUserId(userId);
-    // this.cartService.setStatusById(cartId, 'ORDERED');
 
     return {
       statusCode: HttpStatus.OK,

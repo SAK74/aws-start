@@ -1,68 +1,112 @@
-import { Injectable } from '@nestjs/common';
-// import { v4 } from 'uuid';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { Order } from '../models';
+import { OrderPayload, OrderResponse, StoredOrder } from '../models';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { Order_Status, Prisma } from '@prisma/client';
+
+function adjustOrderFormat(order: StoredOrder): OrderResponse {
+  return {
+    id: order.id,
+    items: order.items.map(({ count, productId }) => ({
+      count,
+      productId: productId,
+    })),
+    address: {
+      address: (order.delivery as Prisma.JsonObject).addres as string,
+      comment: (order.delivery as Prisma.JsonObject).comment as string,
+      firstName: (order.delivery as Prisma.JsonObject).firstName as string,
+      lastName: (order.delivery as Prisma.JsonObject).lastName as string,
+    },
+    statusHistory: order.history.map((el) => ({
+      ...el,
+      timestamp: new Date(el.timestamp).getTime(),
+    })),
+  };
+}
 
 @Injectable()
 export class OrderService {
-  // private orders: Record<string, Order> = {}
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(orderId: string): Promise<Order> {
-    // return this.orders[ orderId ];
+  async findById(orderId: string): Promise<OrderResponse> {
+    console.log('Order ID in find by id: ', orderId);
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: { include: { product: true } } },
+      include: {
+        items: true,
+        history: true,
+      },
     });
-    return {
-      ...order,
-      payment: order.payment as Order['payment'],
-      delivery: order.delivery as Order['delivery'],
-    };
+    return adjustOrderFormat(order);
   }
 
-  async create(data: any) {
-    // const id = v4();
-    const order = {
-      ...data,
-      // id,
-      status: 'IN_PROGRESS',
-    };
+  async create(
+    data: OrderPayload & { total: number; userId: string },
+  ): Promise<OrderResponse> {
+    return this.prisma.$transaction(async (tx) => {
+      // console.log('Data: ', data);
 
-    // this.orders[id] = order;
+      const newOrder = await tx.order.create({
+        data: {
+          items: {
+            createMany: {
+              data: data.items.map(({ count, productId }) => ({
+                count,
+                productId,
+              })),
+            },
+          },
 
-    // return order;
-    // const createdOrder = await this.prisma.order.create({
-    //   data: order,
-    // });
-    return this.prisma.$transaction((tx) => {
-      tx.cart.update({
-        where: { id: data.cartId },
-        data: { status: 'ORDERED' },
+          delivery: data.address as Prisma.JsonObject,
+          payment: {},
+          total: data.total,
+          cart: { connect: { user_id: data.userId } },
+          User: { connect: { id: data.userId } },
+          history: {
+            create: {
+              comment: `some comment to ${Order_Status.OPEN}`,
+            },
+          },
+        },
+        include: {
+          items: true,
+          history: true,
+        },
       });
-      return tx.order.create({ data: order });
+
+      if (newOrder) {
+        await tx.cart.update({
+          where: { user_id: data.userId },
+          data: { status: 'ORDERED', items: { deleteMany: {} } },
+        });
+        return adjustOrderFormat(newOrder);
+      }
     });
   }
 
-  async update(orderId, data) {
-    const order = this.findById(orderId);
+  async update(
+    orderId: string,
+    data: Omit<OrderPayload['statusHistory'][0], 'timestamp'>,
+  ) {
+    // console.log('Order ID, data: ', orderId, data);
 
-    // if (!order) {
-    //   throw new Error('Order does not exist.');
-    // }
-    try {
-      const { id } = await this.prisma.order.findUniqueOrThrow({
-        where: { id: orderId },
-      });
-      await this.prisma.order.update({ where: { id }, data });
-    } catch {
-      throw new Error('Order does not exist.');
+    if (!(await this.prisma.order.findUnique({ where: { id: orderId } }))) {
+      throw new NotFoundException('Order does not exist.');
     }
+    await this.prisma.order.update({
+      where: { id: orderId },
+      data: { history: { create: data } },
+    });
+  }
 
-    // this.orders[orderId] = {
-    //   ...data,
-    //   id: orderId,
-    // };
+  async getAllOrders(): Promise<OrderResponse[]> {
+    return (
+      await this.prisma.order.findMany({
+        include: {
+          items: true,
+          history: true,
+        },
+      })
+    ).map((order) => adjustOrderFormat(order));
   }
 }

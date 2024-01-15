@@ -1,7 +1,4 @@
-enum CartStatuses {
-  OPEN = 'OPEN',
-  ORDERED = 'ORDERED',
-}
+import { Cart_Status } from '@prisma/client';
 
 export type Product = {
   id: string;
@@ -16,10 +13,9 @@ export type CartItem = {
 };
 
 export type Cart = {
-  id: string;
   user_id: string;
   created_at: Date;
   updated_at: Date;
-  status: 'OPEN' | 'ORDERED';
+  status: Cart_Status;
   items: CartItem[];
 };
