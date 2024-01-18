@@ -16,11 +16,13 @@ CREATE TABLE "Cart" (
 
 -- CreateTable
 CREATE TABLE "Cart_Item" (
-    "cart_id" TEXT NOT NULL,
+    "cart_id" TEXT,
     "count" INTEGER NOT NULL,
     "product_id" UUID NOT NULL,
+    "orderId" UUID,
+    "id" UUID NOT NULL,
 
-    CONSTRAINT "Cart_Item_pkey" PRIMARY KEY ("product_id")
+    CONSTRAINT "Cart_Item_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -36,23 +38,13 @@ CREATE TABLE "Product" (
 -- CreateTable
 CREATE TABLE "Order" (
     "userId" TEXT NOT NULL,
-    "cartId" TEXT NOT NULL,
+    "cartId" TEXT,
     "payment" JSONB NOT NULL,
     "delivery" JSONB NOT NULL,
     "total" INTEGER NOT NULL,
     "id" UUID NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Order_Item" (
-    "id" UUID NOT NULL,
-    "order_Id" UUID NOT NULL,
-    "productId" UUID,
-    "count" INTEGER NOT NULL,
-
-    CONSTRAINT "Order_Item_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -80,9 +72,6 @@ CREATE TABLE "User" (
 CREATE UNIQUE INDEX "Cart_user_id_key" ON "Cart"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Cart_Item_product_id_key" ON "Cart_Item"("product_id");
-
--- CreateIndex
 CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
 
 -- CreateIndex
@@ -98,22 +87,19 @@ CREATE UNIQUE INDEX "User_password_key" ON "User"("password");
 ALTER TABLE "Cart" ADD CONSTRAINT "Cart_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_cart_id_fkey" FOREIGN KEY ("cart_id") REFERENCES "Cart"("user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_cart_id_fkey" FOREIGN KEY ("cart_id") REFERENCES "Cart"("user_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart"("user_id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart"("user_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Order_Item" ADD CONSTRAINT "Order_Item_order_Id_fkey" FOREIGN KEY ("order_Id") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Order_Item" ADD CONSTRAINT "Order_Item_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "HistoryStamp" ADD CONSTRAINT "HistoryStamp_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -102,6 +102,7 @@ export class CartController {
       ...body, // TODO: validate and pick only necessary data
       userId,
       total,
+      itemsIds: cart.items.map((item) => ({ id: item.id })),
     });
 
     return {

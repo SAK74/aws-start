@@ -26,46 +26,38 @@ enum Cart_Status {
 }
 
 model Cart_Item {
-  cart_id    String
+  cart_id    String?
   count      Int
-  cart       Cart    @relation(fields: [cart_id], references: [user_id])
+  cart       Cart?   @relation(fields: [cart_id], references: [user_id], onDelete: SetNull)
   product    Product @relation(fields: [product_id], references: [id])
-  product_id String  @unique @db.Uuid
-
-  @@id([product_id])
-}
-
-model Product {
-  id          String       @id @db.Uuid
-  title       String
-  description String
-  price       Int
-  Cart_Item   Cart_Item?
-  Order_Item  Order_Item[]
-}
-
-model Order {
-  userId   String
-  cartId   String
-  cart     Cart         @relation(fields: [cartId], references: [user_id])
-  items    Order_Item[]
-  payment  Json
-  delivery Json
-  total    Int
-  User     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  history HistoryStamp[]
+  product_id String  @db.Uuid // ? unique
+  Order      Order?  @relation(fields: [orderId], references: [id])
+  orderId    String? @db.Uuid
 
   id String @id @default(uuid()) @db.Uuid
 }
 
-model Order_Item {
-  id        String   @id @default(uuid()) @db.Uuid
-  order_Id  String   @db.Uuid
-  order     Order    @relation(fields: [order_Id], references: [id], onDelete: Cascade)
-  Product   Product? @relation(fields: [productId], references: [id])
-  productId String?  @db.Uuid
-  count     Int
+model Product {
+  id          String      @id @db.Uuid
+  title       String
+  description String
+  price       Int
+  Cart_Item   Cart_Item[]
+}
+
+model Order {
+  userId   String
+  cartId   String?
+  cart     Cart?       @relation(fields: [cartId], references: [user_id])
+  items    Cart_Item[]
+  payment  Json
+  delivery Json
+  total    Int
+  User     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  history HistoryStamp[]
+
+  id String @id @default(uuid()) @db.Uuid
 }
 
 model HistoryStamp {

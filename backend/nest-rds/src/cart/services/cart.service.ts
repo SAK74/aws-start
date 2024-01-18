@@ -14,9 +14,11 @@ export class CartService {
       where: {
         user_id: userId,
       },
-      include: { items: { include: { product: true } } },
+      include: {
+        items: { include: { product: true }, orderBy: { product_id: 'asc' } },
+      },
     });
-    console.log(cart);
+    // console.log(cart);
     return cart;
   }
 
@@ -46,26 +48,55 @@ export class CartService {
     userId: string,
     { product, count }: CartItem,
   ): Promise<Cart> {
+    const itemWithProductId = await this.prisma.cart_Item.findFirst({
+      where: { product_id: product.id, cart_id: userId },
+    });
+
+    // console.log('Cart item: ', itemWithProductId);
+
+    const existingProduct = await this.prisma.product.findUnique({
+      where: { id: product.id },
+    });
+
+    // console.log('Product: ', existingProduct);
+
     const updatedCart = await this.prisma.cart.upsert({
       where: {
         user_id: userId,
       },
       create: {
-        status: 'OPEN',
         user_id: userId,
         items: { create: { count, product: { create: product } } },
       },
       update: {
         items: {
-          upsert: {
-            where: { product_id: product.id },
-            update: { count },
-            create: { count, product: { create: product } },
-          },
+          ...(itemWithProductId
+            ? {
+                update: {
+                  where: { id: itemWithProductId.id },
+                  data: { count },
+                },
+              }
+            : {
+                create: {
+                  count,
+                  product: {
+                    ...(existingProduct
+                      ? {
+                          connect: { id: product.id },
+                        }
+                      : {
+                          create: product,
+                        }),
+                  },
+                },
+              }),
         },
+        status: 'OPEN',
       },
       include: { items: { include: { product: true } } },
     });
+
     // console.log(updatedCart);
     return updatedCart;
   }

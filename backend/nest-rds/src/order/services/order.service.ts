@@ -7,9 +7,9 @@ import { Order_Status, Prisma } from '@prisma/client';
 function adjustOrderFormat(order: StoredOrder): OrderResponse {
   return {
     id: order.id,
-    items: order.items.map(({ count, productId }) => ({
+    items: order.items.map(({ count, product_id }) => ({
       count,
-      productId: productId,
+      productId: product_id,
     })),
     address: {
       address: (order.delivery as Prisma.JsonObject).addres as string,
@@ -41,7 +41,11 @@ export class OrderService {
   }
 
   async create(
-    data: OrderPayload & { total: number; userId: string },
+    data: OrderPayload & {
+      total: number;
+      userId: string;
+      itemsIds: { id: string }[];
+    },
   ): Promise<OrderResponse> {
     return this.prisma.$transaction(async (tx) => {
       // console.log('Data: ', data);
@@ -49,12 +53,7 @@ export class OrderService {
       const newOrder = await tx.order.create({
         data: {
           items: {
-            createMany: {
-              data: data.items.map(({ count, productId }) => ({
-                count,
-                productId,
-              })),
-            },
+            connect: data.itemsIds,
           },
 
           delivery: data.address as Prisma.JsonObject,
@@ -77,7 +76,7 @@ export class OrderService {
       if (newOrder) {
         await tx.cart.update({
           where: { user_id: data.userId },
-          data: { status: 'ORDERED', items: { deleteMany: {} } },
+          data: { status: 'ORDERED', items: { disconnect: data.itemsIds } },
         });
         return adjustOrderFormat(newOrder);
       }

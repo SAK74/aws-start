@@ -23,8 +23,8 @@ export interface StoredOrder extends Order {
   items: {
     id: string;
     count: number;
-    order_Id: string;
-    productId: string;
+    order_Id?: string;
+    product_id: string;
   }[];
   history: {
     status: Order_Status;
