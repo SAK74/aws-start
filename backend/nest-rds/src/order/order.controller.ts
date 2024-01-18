@@ -6,6 +6,7 @@ import {
   Req,
   Param,
   Body,
+  Delete,
 } from '@nestjs/common';
 import { OrderService } from './services';
 import { BasicAuthGuard } from 'src/auth';
@@ -32,5 +33,11 @@ export class OrderController {
     @Body() body: { status: Order_Status; comment: string }, // to validate body
   ) {
     await this.orderService.update(id, body);
+  }
+
+  @Delete(':id')
+  @UseGuards(BasicAuthGuard)
+  async deleteOrder(@Param('id') id: string) {
+    return this.orderService.removeOrderById(id);
   }
 }

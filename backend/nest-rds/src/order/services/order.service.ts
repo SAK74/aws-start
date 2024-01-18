@@ -109,4 +109,12 @@ export class OrderService {
       })
     ).map((order) => adjustOrderFormat(order));
   }
+
+  removeOrderById(id: string) {
+    try {
+      return this.prisma.order.delete({ where: { id } });
+    } catch (err) {
+      throw new NotFoundException(err);
+    }
+  }
 }
