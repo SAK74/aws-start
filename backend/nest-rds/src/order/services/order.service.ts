@@ -11,12 +11,13 @@ function adjustOrderFormat(order: StoredOrder): OrderResponse {
       count,
       productId: product_id,
     })),
-    address: {
-      address: (order.delivery as Prisma.JsonObject).addres as string,
-      comment: (order.delivery as Prisma.JsonObject).comment as string,
-      firstName: (order.delivery as Prisma.JsonObject).firstName as string,
-      lastName: (order.delivery as Prisma.JsonObject).lastName as string,
-    },
+    // address: {
+    //   address: (order.delivery as Prisma.JsonObject).addres as string,
+    //   comment: (order.delivery as Prisma.JsonObject).comment as string,
+    //   firstName: (order.delivery as Prisma.JsonObject).firstName as string,
+    //   lastName: (order.delivery as Prisma.JsonObject).lastName as string,
+    // },
+    address: order.delivery as Prisma.JsonObject as OrderResponse['address'],
     statusHistory: order.history.map((el) => ({
       ...el,
       timestamp: new Date(el.timestamp).getTime(),
@@ -29,7 +30,7 @@ export class OrderService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findById(orderId: string): Promise<OrderResponse> {
-    console.log('Order ID in find by id: ', orderId);
+    // console.log('Order ID in find by id: ', orderId);
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: {
