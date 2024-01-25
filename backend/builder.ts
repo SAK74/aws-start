@@ -36,7 +36,8 @@ type.forEach((type) => {
         "getProductsList",
         "getProductById",
         "createProduct",
-        "catalogBatchProcess"
+        "catalogBatchProcess",
+        "deleteProduct"
       );
       break;
     case "auth":

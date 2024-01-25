@@ -9,7 +9,7 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export const cors: gatewayapi.CorsOptions = {
   allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
-  allowMethods: ["GET", "POST", "OPTIONS"],
+  allowMethods: [lambda.HttpMethod.ALL],
   allowHeaders: [
     "Content-Type",
     "Authorization",
@@ -99,7 +99,34 @@ export class ProductService extends cdk.Stack {
       }
     );
 
-    productsList.addMethod("PUT", createProductIntegration);
+    const delProdLambda = new lambda.Function(this, "delete-product-lambda", {
+      ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist/deleteProduct"),
+      handler: "deleteProduct.handler",
+    });
+    const deleteProdIntegration = new gatewayapi.LambdaIntegration(
+      delProdLambda
+    );
+    const authorizer = new gatewayapi.TokenAuthorizer(
+      this,
+      "basic-authorizer",
+      {
+        handler: lambda.Function.fromFunctionArn(
+          this,
+          "lambda-authorizer",
+          cdk.Fn.importValue("AuthStack:AuthorizerId")
+        ),
+        resultsCacheTtl: cdk.Duration.minutes(0),
+      }
+    );
+
+    productById.addMethod(lambda.HttpMethod.DELETE, deleteProdIntegration, {
+      authorizer,
+    });
+
+    productsList.addMethod(lambda.HttpMethod.PUT, createProductIntegration, {
+      authorizer,
+    });
 
     const productTopic = new sns.Topic(this, "create-product-topic", {});
 
@@ -156,6 +183,7 @@ export class ProductService extends cdk.Stack {
       getProductById,
       createProduct,
       catalogBatchProcessLambda,
+      delProdLambda,
     ].forEach((lambda) => {
       lambda.role?.addManagedPolicy(dbAccessPolicy);
       lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");

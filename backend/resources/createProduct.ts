@@ -4,7 +4,6 @@ import {
   DynamoDBDocumentClient,
   TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { randomUUID } from "crypto";
 import { APIGatewayEvent, Handler } from "aws-lambda";
 import { createTransaction } from "./utils/createTransaction";
 
@@ -28,7 +27,7 @@ export const handler: Handler<APIGatewayEvent> = async (event) => {
 
     const resp = (await documentClient.send(command)).$metadata;
 
-    return buildResp(200, resp);
+    return buildResp(201, resp);
   } catch (err) {
     return buildResp(500, (err as Error).message || "Unknown server error...");
   }
