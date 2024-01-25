@@ -29,6 +29,7 @@ export const handler: Handler<APIGatewayEvent> = async (event) => {
 
     return buildResp(201, resp);
   } catch (err) {
+    console.log(err);
     return buildResp(500, (err as Error).message || "Unknown server error...");
   }
 };
