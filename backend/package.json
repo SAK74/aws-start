@@ -22,7 +22,7 @@
     "predeploy:auth": "ts-node builder.ts type=auth",
     "token:generate": "ts-node encode.util.ts",
     "deploy:rds": "cdk deploy nest-rds-service",
-    "predeploy:rds": "ts-node builder.ts type=rds",
+    "predeploy:rds": "npm run prisma:migrate & npm run build --prefix nest-rds",
     "prisma:migrate": "npm run --prefix nest-rds prisma:migrate",
     "db:del:create": "ts-node --prefer-ts-exts db/delete.ts & npm run db:create & npm run db:seed"
   },

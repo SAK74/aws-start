@@ -9,15 +9,16 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export const cors: gatewayapi.CorsOptions = {
   allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
-  allowMethods: [lambda.HttpMethod.ALL],
-  allowHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Amz-Date",
-    "X-Api-Key",
-    "X-Amz-Security-Token",
-    "X-Amz-User-Agent",
-  ],
+  allowMethods: gatewayapi.Cors.ALL_METHODS,
+  allowHeaders: gatewayapi.Cors.DEFAULT_HEADERS,
+  // [
+  //   "Content-Type",
+  //   "Authorization",
+  //   "X-Amz-Date",
+  //   "X-Api-Key",
+  //   "X-Amz-Security-Token",
+  //   "X-Amz-User-Agent",
+  // ],
   allowCredentials: true,
 };
 

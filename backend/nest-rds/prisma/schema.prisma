@@ -83,7 +83,7 @@ model User {
   id       String  @id @unique
   name     String  @unique
   email    String? @unique
-  password String  @unique
+  password String
   cart     Cart?
   order    Order[]
 }
