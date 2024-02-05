@@ -13,6 +13,7 @@ async function bootstrap() {
     origin: (req, callback) => callback(null, true),
   });
   app.use(helmet());
+  await app.listen(port);
 }
 
 // console.log('db url: ', process.env.DATABASE_URL);
