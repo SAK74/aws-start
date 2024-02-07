@@ -16,19 +16,4 @@ export const products: Omit<Product, "count">[] = [
     price: 23,
     title: "Product",
   },
-  {
-    description: "Short Product Description4",
-    price: 15,
-    title: "ProductTest",
-  },
-  {
-    description: "Short Product Descriptio1",
-    price: 23,
-    title: "Product2",
-  },
-  {
-    description: "Short Product Description7",
-    price: 15,
-    title: "ProductName",
-  },
 ];

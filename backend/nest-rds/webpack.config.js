@@ -1,9 +1,11 @@
-import webpack from 'webpack';
-import TerserPlugin from 'terser-webpack-plugin';
+// @ts-check;
+const TerserPlugin = require('terser-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
+
 /**
- * @param {webpack.Configuration} options
- * @param {webpack} webpack
- * @returns {webpack.Configuration}
+ * @param {import ('webpack').Configuration} options
+ * @param {import ('webpack')} webpack
+ * @returns {import ('webpack').Configuration}
  */
 
 module.exports = (options, webpack) => {
@@ -14,6 +16,7 @@ module.exports = (options, webpack) => {
   return {
     ...options,
     externals: [],
+    target: 'node18',
     plugins: [
       ...options.plugins,
       new webpack.IgnorePlugin({
@@ -28,10 +31,20 @@ module.exports = (options, webpack) => {
           return false;
         },
       }),
+      new CopyPlugin({
+        patterns: [
+          { from: './node_modules/.prisma/client/schema.prisma', to: './' },
+          {
+            from: './node_modules/.prisma/client/libquery_engine-rhel-openssl-1.0.x.so.node',
+            to: './',
+          },
+        ],
+      }),
     ],
     output: {
       ...options.output,
       libraryTarget: 'commonjs2',
+      filename: 'main.js',
     },
     optimization: {
       minimizer: [

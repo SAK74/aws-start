@@ -43,7 +43,7 @@ export default function PageOrder() {
       queryKey: "products",
       queryFn: async () => {
         const res = await axios.get<AvailableProduct[]>(
-          `${API_PATHS.bff}/product/available`
+          `${API_PATHS.bff}/product`
         );
         return res.data;
       },
@@ -156,7 +156,7 @@ export default function PageOrder() {
           </TableHead>
           <TableBody>
             {statusHistory.map((statusHistoryItem) => (
-              <TableRow key={order.id}>
+              <TableRow key={statusHistoryItem.status}>
                 <TableCell component="th" scope="row">
                   {statusHistoryItem.status.toUpperCase()}
                 </TableCell>

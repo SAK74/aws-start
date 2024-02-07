@@ -7,24 +7,16 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-  // private readonly users: Record<string, User>;
-
-  constructor(private readonly prisma: PrismaService) {
-    // this.users = {}
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
   async findOne(userId: string): Promise<User> {
-    // return this.users[ userId ];
     return this.prisma.user.findUnique({ where: { id: userId } });
   }
 
-  async createOne({ name, password, email }: User): Promise<User> {
+  async createOne({ name, password, email }: Omit<User, 'id'>): Promise<User> {
     const id = v4();
     const newUser = { id: name || id, name, password, email };
 
-    // this.users[ id ] = newUser;
     return await this.prisma.user.create({ data: newUser });
-
-    // return newUser;
   }
 }

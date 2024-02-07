@@ -19,9 +19,12 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prisma:migrate": "prisma migrate dev",
-    "start:migrate:dev": "npm run prisma:migrate && npm run start:dev",
-    "start:migrate:prod": "prisma migrate deploy && npm run start:prod"
+    "prisma:migrate:dev": "prisma migrate dev --skip-generate",
+    "prisma:migrate": "prisma migrate deploy & prisma generate",
+    "start:migrate:dev": "npm run prisma:migrate:dev && npm run start:dev",
+    "start:migrate:prod": "npm run start:migrate && npm run start:prod",
+    "docker:postgres:start": "docker run --name postgres-db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=masterPostgres -e POSTGRES_DB=mydb --rm -p 5432:5432 d492c6ccb0d1",
+    "prisma:reset": "prisma migrate reset --skip-generate"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -57,6 +60,7 @@
     "@typescript-eslint/eslint-plugin": "5.60.0",
     "@typescript-eslint/parser": "5.60.0",
     "aws-lambda": "^1.0.7",
+    "copy-webpack-plugin": "^12.0.2",
     "cross-env": "^7.0.3",
     "eslint": "8.43.0",
     "eslint-config-prettier": "^8.8.0",

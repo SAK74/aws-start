@@ -1,28 +1,28 @@
 -- CreateEnum
-CREATE TYPE "Card_Status" AS ENUM ('OPEN', 'ORDERED');
+CREATE TYPE "Cart_Status" AS ENUM ('OPEN', 'ORDERED');
 
 -- CreateEnum
-CREATE TYPE "Order_Status" AS ENUM ('ORDERED', 'IN_PROGRESS', 'DELIVERED');
+CREATE TYPE "Order_Status" AS ENUM ('OPEN', 'APPROVED', 'CONFIRMED', 'SENT', 'COMPLETED', 'CANCELLED');
 
 -- CreateTable
 CREATE TABLE "Cart" (
-    "id" UUID NOT NULL,
     "user_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
-    "status" "Card_Status" NOT NULL DEFAULT 'OPEN',
+    "status" "Cart_Status" NOT NULL DEFAULT 'OPEN',
 
-    CONSTRAINT "Cart_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Cart_pkey" PRIMARY KEY ("user_id")
 );
 
 -- CreateTable
 CREATE TABLE "Cart_Item" (
-    "product_id" UUID NOT NULL,
-    "cart_id" UUID NOT NULL,
+    "cart_id" TEXT,
     "count" INTEGER NOT NULL,
-    "order_id" UUID,
+    "product_id" UUID NOT NULL,
+    "orderId" UUID,
+    "id" UUID NOT NULL,
 
-    CONSTRAINT "Cart_Item_pkey" PRIMARY KEY ("cart_id")
+    CONSTRAINT "Cart_Item_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -38,15 +38,24 @@ CREATE TABLE "Product" (
 -- CreateTable
 CREATE TABLE "Order" (
     "userId" TEXT NOT NULL,
-    "cartId" UUID NOT NULL,
+    "cartId" TEXT,
     "payment" JSONB NOT NULL,
     "delivery" JSONB NOT NULL,
-    "comments" TEXT NOT NULL,
-    "status" "Order_Status",
-    "total" DOUBLE PRECISION NOT NULL,
+    "total" INTEGER NOT NULL,
     "id" UUID NOT NULL,
 
     CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "HistoryStamp" (
+    "status" "Order_Status" NOT NULL DEFAULT 'OPEN',
+    "timestamp" TIMESTAMP(3) NOT NULL,
+    "comment" TEXT NOT NULL,
+    "order_id" UUID NOT NULL,
+    "id" UUID NOT NULL,
+
+    CONSTRAINT "HistoryStamp_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -63,13 +72,7 @@ CREATE TABLE "User" (
 CREATE UNIQUE INDEX "Cart_user_id_key" ON "Cart"("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Cart_Item_product_id_key" ON "Cart_Item"("product_id");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Order_userId_key" ON "Order"("userId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Order_cartId_key" ON "Order"("cartId");
+CREATE UNIQUE INDEX "User_id_key" ON "User"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_name_key" ON "User"("name");
@@ -77,23 +80,23 @@ CREATE UNIQUE INDEX "User_name_key" ON "User"("name");
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
--- CreateIndex
-CREATE UNIQUE INDEX "User_password_key" ON "User"("password");
-
 -- AddForeignKey
 ALTER TABLE "Cart" ADD CONSTRAINT "Cart_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_cart_id_fkey" FOREIGN KEY ("cart_id") REFERENCES "Cart"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_cart_id_fkey" FOREIGN KEY ("cart_id") REFERENCES "Cart"("user_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "Product"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "Order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Cart_Item" ADD CONSTRAINT "Cart_Item_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Order" ADD CONSTRAINT "Order_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Order" ADD CONSTRAINT "Order_cartId_fkey" FOREIGN KEY ("cartId") REFERENCES "Cart"("user_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "HistoryStamp" ADD CONSTRAINT "HistoryStamp_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE;

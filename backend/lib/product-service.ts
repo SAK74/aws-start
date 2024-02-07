@@ -9,15 +9,16 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 export const cors: gatewayapi.CorsOptions = {
   allowOrigins: gatewayapi.Cors.ALL_ORIGINS,
-  allowMethods: ["GET", "POST", "OPTIONS"],
-  allowHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Amz-Date",
-    "X-Api-Key",
-    "X-Amz-Security-Token",
-    "X-Amz-User-Agent",
-  ],
+  allowMethods: gatewayapi.Cors.ALL_METHODS,
+  allowHeaders: gatewayapi.Cors.DEFAULT_HEADERS,
+  // [
+  //   "Content-Type",
+  //   "Authorization",
+  //   "X-Amz-Date",
+  //   "X-Api-Key",
+  //   "X-Amz-Security-Token",
+  //   "X-Amz-User-Agent",
+  // ],
   allowCredentials: true,
 };
 
@@ -28,12 +29,12 @@ export const sharedLambdaProps: Omit<
   runtime: lambda.Runtime.NODEJS_18_X,
 };
 
-interface ProductsServiceProps extends cdk.StackProps {
-  catalogItemsQueue: sqs.Queue;
-}
+// interface ProductsServiceProps extends cdk.StackProps {
+//   catalogItemsQueue: sqs.Queue;
+// }
 
 export class ProductService extends cdk.Stack {
-  constructor(scope: Construct, id: string, props: ProductsServiceProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const getProductList = new lambda.Function(this, "get-products-list", {
@@ -99,7 +100,34 @@ export class ProductService extends cdk.Stack {
       }
     );
 
-    productsList.addMethod("POST", createProductIntegration);
+    const delProdLambda = new lambda.Function(this, "delete-product-lambda", {
+      ...sharedLambdaProps,
+      code: lambda.Code.fromAsset("dist/deleteProduct"),
+      handler: "deleteProduct.handler",
+    });
+    const deleteProdIntegration = new gatewayapi.LambdaIntegration(
+      delProdLambda
+    );
+    const authorizer = new gatewayapi.TokenAuthorizer(
+      this,
+      "basic-authorizer",
+      {
+        handler: lambda.Function.fromFunctionArn(
+          this,
+          "lambda-authorizer",
+          cdk.Fn.importValue("AuthStack:AuthorizerId")
+        ),
+        resultsCacheTtl: cdk.Duration.minutes(0),
+      }
+    );
+
+    productById.addMethod(lambda.HttpMethod.DELETE, deleteProdIntegration, {
+      authorizer,
+    });
+
+    productsList.addMethod(lambda.HttpMethod.PUT, createProductIntegration, {
+      authorizer,
+    });
 
     const productTopic = new sns.Topic(this, "create-product-topic", {});
 
@@ -119,7 +147,12 @@ export class ProductService extends cdk.Stack {
       },
     });
 
-    const catalogItemsQueue = props.catalogItemsQueue;
+    // const catalogItemsQueue = props.catalogItemsQueue;
+    const catalogItemsQueue = sqs.Queue.fromQueueArn(
+      this,
+      "items-queue",
+      cdk.Fn.importValue("ImportService:QueueArn")
+    );
 
     const catalogBatchProcessLambda = new lambda.Function(
       this,
@@ -151,6 +184,7 @@ export class ProductService extends cdk.Stack {
       getProductById,
       createProduct,
       catalogBatchProcessLambda,
+      delProdLambda,
     ].forEach((lambda) => {
       lambda.role?.addManagedPolicy(dbAccessPolicy);
       lambda.addEnvironment("PRODUCTS_TABLE_NAME", "Products");

@@ -1,9 +1,10 @@
 import { DynamoDBClient, CreateTableCommand } from "@aws-sdk/client-dynamodb";
+import "dotenv/config";
 
 const client = new DynamoDBClient({ region: "eu-north-1" });
 
 const createProducts = new CreateTableCommand({
-  TableName: "Products",
+  TableName: process.env.PRODUCTS_TABLE_NAME,
   KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
   AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
   ProvisionedThroughput: {
@@ -14,7 +15,7 @@ const createProducts = new CreateTableCommand({
 });
 
 const createStock = new CreateTableCommand({
-  TableName: "Stock",
+  TableName: process.env.STOCK_TABLE_NAME,
   KeySchema: [{ AttributeName: "product_id", KeyType: "HASH" }],
   AttributeDefinitions: [{ AttributeName: "product_id", AttributeType: "S" }],
   ProvisionedThroughput: { ReadCapacityUnits: 1, WriteCapacityUnits: 1 },

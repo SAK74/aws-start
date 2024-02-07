@@ -11,10 +11,10 @@ const app = new cdk.App();
 
 new AuthServiceStack(app, "auth-service");
 
-const importService = new ImportServiceStack(app, "import-service", {});
+new ImportServiceStack(app, "import-service", {});
 
 new ProductService(app, "product-service", {
-  catalogItemsQueue: importService.catalogItemsQueue,
+  // catalogItemsQueue: importService.catalogItemsQueue,
 });
 
 new RDSServiceStack(app, "nest-rds-service", {});

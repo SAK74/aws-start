@@ -9,68 +9,81 @@ datasource db {
 }
 
 model Cart {
-  id         String      @id @default(uuid()) @db.Uuid
   user_id    String      @unique
   created_at DateTime    @default(now())
   updated_at DateTime    @updatedAt
-  status     Card_Status @default(OPEN)
+  status     Cart_Status @default(OPEN)
   items      Cart_Item[]
   order      Order[]
   User       User        @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id])
 }
 
-enum Card_Status {
+enum Cart_Status {
   OPEN
   ORDERED
 }
 
 model Cart_Item {
-  product_id String  @unique @db.Uuid
-  cart_id    String  @db.Uuid
+  cart_id    String?
   count      Int
-  cart       Cart    @relation(fields: [cart_id], references: [id])
+  cart       Cart?   @relation(fields: [cart_id], references: [user_id], onDelete: SetNull)
   product    Product @relation(fields: [product_id], references: [id])
+  product_id String  @db.Uuid // ? unique
+  Order      Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String? @db.Uuid
 
-  Order    Order?  @relation(fields: [order_id], references: [id])
-  order_id String? @db.Uuid
-
-  @@id([cart_id])
+  id String @id @default(uuid()) @db.Uuid
 }
 
 model Product {
-  id          String     @id @default(uuid()) @db.Uuid
+  id          String      @id @db.Uuid
   title       String
   description String
   price       Int
-  cart        Cart_Item?
+  Cart_Item   Cart_Item[]
 }
 
 model Order {
-  userId   String        @unique
-  cartId   String        @unique @db.Uuid
-  cart     Cart          @relation(fields: [cartId], references: [id])
+  userId   String
+  cartId   String?
+  cart     Cart?       @relation(fields: [cartId], references: [user_id])
   items    Cart_Item[]
   payment  Json
   delivery Json
-  comments String        @db.Text
-  status   Order_Status?
-  total    Float
-  User     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  total    Int
+  User     User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  history HistoryStamp[]
+
+  id String @id @default(uuid()) @db.Uuid
+}
+
+model HistoryStamp {
+  status    Order_Status @default(OPEN)
+  timestamp DateTime     @updatedAt
+  comment   String       @db.Text
+  order_id  String       @db.Uuid
+  Order     Order        @relation(fields: [order_id], references: [id], onDelete: Cascade)
 
   id String @id @default(uuid()) @db.Uuid
 }
 
 enum Order_Status {
-  ORDERED
-  IN_PROGRESS
-  DELIVERED
+  OPEN
+  APPROVED
+  CONFIRMED
+  SENT
+  COMPLETED
+  CANCELLED
 }
 
 model User {
-  id       String  @id
+  id       String  @id @unique
   name     String  @unique
   email    String? @unique
-  password String  @unique
-  cart     Cart[]
+  password String
+  cart     Cart?
   order    Order[]
 }

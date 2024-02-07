@@ -9,7 +9,7 @@ export const buildResp = (
     "Access-Control-Allow-Headers":
       "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent",
     "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Allow-Methods": "OPTIONS,GET",
+    "Access-Control-Allow-Methods": "*",
   }
 ) => ({
   statusCode: status,
