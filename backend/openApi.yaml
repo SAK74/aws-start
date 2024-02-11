@@ -37,8 +37,62 @@ paths:
         "404":
           description: Product not exist
       tags:
-        - Products
+        - Product
 
+    put:
+      summary: Create / modify product
+      description: Create / modify product by id
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+
+      responses:
+        "201":
+          description: "Created"
+
+        "404":
+          description: Product not exist
+        "403":
+          description: Wrong password
+        "401":
+          description: Unathorized
+
+      security:
+        - basicAuth: []
+    delete:
+      summary: Delete product
+      description: Delete product by id
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+            format: uuid
+
+      responses:
+        "200":
+          description: "Success"
+
+        "404":
+          description: Product not exist
+        "403":
+          description: Wrong password
+        "401":
+          description: Unathorized
+
+      security:
+        - basicAuth: []
 info:
   title: Product Service
   description: Example product Service
@@ -46,27 +100,33 @@ info:
   contact: {}
 tags: []
 servers:
-  - url: https://dv723ezvf7.execute-api.eu-north-1.amazonaws.com/dev
+  - url: https://uj2cycpqbe.execute-api.eu-north-1.amazonaws.com/dev
     variables: {}
 components:
   schemas:
     Product:
       type: object
       properties:
-        description:
-          type: string
-          example: Short Product Description
-        title:
-          type: string
-          example: ProductTitle
-
         id:
           type: string
           format: uuid
+        title:
+          type: string
+          example: ProductTitle
+        description:
+          type: string
+          example: Short Product Description
         price:
           type: number
           example: 25
+        count:
+          type: number
+          example: 3
       required:
         - title
         - price
-        - id
+        - count
+  securitySchemes:
+    basicAuth:
+      scheme: basic
+      type: http

@@ -27,7 +27,7 @@
 > :warning: For some operations ( such as create/delete, import ... ) user authorization is required.  
 > &nbsp; On this step this feature (authorization) is't realized in frontend-app (yet at least ). So, to full functionality, should set in browser local storage "manually" key
 > `authorization_token -> U0FLNzQ6VEVTVF9QQVNTV09SRA==`
-> ( base-64 encoded pair SAK:TEST_PASSWORD )
+> ( base-64 encoded pair SAK74:TEST_PASSWORD )
 
 > :warning: Products list data is cached on proxy bff-service for 2 min.
 
